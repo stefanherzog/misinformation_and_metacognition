@@ -1,0 +1,1009 @@
+---
+title: "Trials to counts"
+site: workflowr::wflow_site
+output:
+  workflowr::wflow_html:
+    code_folding: hide
+    number_sections: yes
+    toc: yes
+    toc_depth: 3
+editor_options:
+  chunk_output_type: console
+---
+
+
+
+# Setup
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = TRUE,
+  cache = FALSE
+)
+
+```
+
+
+
+# Source `dependencies.R`
+
+```{r dependencies, message=FALSE, code=readr::read_lines(here::here("code/_dependencies.R"))}
+source(here::here("code/_dependencies.R"))
+
+```
+
+
+
+# Source `Function_trials2counts.R`
+
+```{r trials2counts, message=FALSE, code=readr::read_lines(here::here("code/fleming_code/Function_trials2counts.R"))}
+source(here("code/fleming_code/Function_trials2counts.R"))
+
+```
+
+
+
+# Load data
+
+```{r load_data}
+# load data
+participants <- read_rds(here("output/participants.rds"))
+task <- read_rds(here("output/task.rds"))
+
+```
+
+
+
+# Id's of participant subgroups
+
+```{r subgroups_participants}
+# select id's of all participants
+ids_all_participants <- participants %>%
+  distinct(id)
+
+# select id's who completed six or more waves
+ids_six_or_more_waves <- task %>%
+  filter(n_waves >= 6) %>%
+  distinct(id)
+
+# select id's who completed all twelve waves
+ids_twelve_waves <- task %>%
+  filter(n_waves == 12) %>%
+  distinct(id)
+
+# select id's of Democrats
+ids_democrat <- participants %>%
+  filter(party == "Democrat") %>%
+  distinct(id)
+
+# select id's of Republicans
+ids_republican <- participants %>%
+  filter(party == "Republican") %>%
+  distinct(id)
+
+# select id's of liberals pooled
+ids_liberal_pooled <- participants %>%
+  filter(ideology == "liberal") %>%
+  distinct(id)
+
+# select id's of moderates
+ids_moderate <- participants %>%
+  filter(ideology == "moderate") %>%
+  distinct(id)
+
+# select id's of conservatives pooled
+ids_conservative_pooled <- participants %>%
+  filter(ideology == "conservative") %>%
+  distinct(id)
+
+# select id's of very liberals
+ids_very_liberal <- participants %>%
+  filter(ideology_index_rounded == "1") %>%
+  distinct(id)
+
+# select id's of liberals
+ids_liberal <- participants %>%
+  filter(ideology_index_rounded == "2") %>%
+  distinct(id)
+
+# select id's of somewhat liberals
+ids_somewhat_liberal <- participants %>%
+  filter(ideology_index_rounded == "3") %>%
+  distinct(id)
+
+# select id's of somewhat conservatives
+ids_somewhat_conservative <- participants %>%
+  filter(ideology_index_rounded == "5") %>%
+  distinct(id)
+
+# select id's of conservatives
+ids_conservative <- participants %>%
+  filter(ideology_index_rounded == "6") %>%
+  distinct(id)
+
+# select id's of very conservatives
+ids_very_conservative <- participants  %>%
+  filter(ideology_index_rounded == "7") %>%
+  distinct(id)
+
+```
+
+
+
+# Trials of participant and/or statement subgroups
+
+## Define function
+
+```{r fnc_task_list}
+fnc_task_list <-
+  function(statement_characteristic,
+           statement_characteristic_value,
+           participant_subgroup) {
+    output <- task %>%
+      filter(statement_characteristic == statement_characteristic_value) %>%
+      group_by(id) %>%
+      filter(id %in% participant_subgroup$id) %>%
+      select(truth, dec, conf_high) %>%
+      nest() %>%
+      ungroup()
+    
+    return(output)
+  }
+
+```
+
+## Get trials
+
+```{r subgroups}
+task_list_all_participants <-
+  fnc_task_list(task$dummy, 1, ids_all_participants)
+
+task_list_six_or_more_waves <-
+  fnc_task_list(task$dummy, 1, ids_six_or_more_waves)
+
+task_list_twelve_waves <-
+  fnc_task_list(task$dummy, 1, ids_twelve_waves)
+
+task_list_democrat <- fnc_task_list(task$dummy, 1, ids_democrat)
+
+task_list_republican <- fnc_task_list(task$dummy, 1, ids_republican)
+
+task_list_liberal_pooled <-
+  fnc_task_list(task$dummy, 1, ids_liberal_pooled)
+
+task_list_moderate <- fnc_task_list(task$dummy, 1, ids_moderate)
+
+task_list_conservative_pooled <-
+  fnc_task_list(task$dummy, 1, ids_conservative_pooled)
+
+task_list_very_liberal <-
+  fnc_task_list(task$dummy, 1, ids_very_liberal)
+
+task_list_liberal <- fnc_task_list(task$dummy, 1, ids_liberal)
+
+task_list_somewhat_liberal <-
+  fnc_task_list(task$dummy, 1, ids_somewhat_liberal)
+
+task_list_somewhat_conservative <-
+  fnc_task_list(task$dummy, 1, ids_somewhat_conservative)
+
+task_list_conservative <-
+  fnc_task_list(task$dummy, 1, ids_conservative)
+
+task_list_very_conservative <-
+  fnc_task_list(task$dummy, 1, ids_very_conservative)
+
+task_list_congruent_party_statements <-
+  fnc_task_list(task$congruent_party, 1, ids_all_participants)
+
+task_list_incongruent_party_statements <-
+  fnc_task_list(task$congruent_party, 2, ids_all_participants)
+
+task_list_neutral_party_statements <-
+  fnc_task_list(task$congruent_party, 3, ids_all_participants)
+
+task_list_congruent_ideology_statements <-
+  fnc_task_list(task$congruent_ideology, 1, ids_all_participants)
+
+task_list_incongruent_ideology_statements <-
+  fnc_task_list(task$congruent_ideology, 2, ids_all_participants)
+
+task_list_neutral_ideology_statements <-
+  fnc_task_list(task$congruent_ideology, 3, ids_all_participants)
+
+task_list_congruent_truth_party_statements <-
+  fnc_task_list(task$congruent_truth_party, 1, ids_all_participants)
+
+task_list_incongruent_truth_party_statements <-
+  fnc_task_list(task$congruent_truth_party, 2, ids_all_participants)
+
+task_list_neutral_truth_party_statements <-
+  fnc_task_list(task$congruent_truth_party, 3, ids_all_participants)
+
+task_list_congruent_truth_ideology_statements <-
+  fnc_task_list(task$congruent_truth_ideology, 1, ids_all_participants)
+
+task_list_incongruent_truth_ideology_statements <-
+  fnc_task_list(task$congruent_truth_ideology, 2, ids_all_participants)
+
+task_list_neutral_truth_ideology_statements <-
+  fnc_task_list(task$congruent_truth_ideology, 3, ids_all_participants)
+
+task_list_recognized_statements <-
+  fnc_task_list(task$recog, 1, ids_all_participants)
+
+task_list_unrecognized_statements <-
+  fnc_task_list(task$recog, 0, ids_all_participants)
+
+task_list_satire_statements <-
+  fnc_task_list(task$satire, 1, ids_all_participants)
+
+task_list_non_satire_statements <-
+  fnc_task_list(task$satire, 0, ids_all_participants)
+
+task_list_democrat_congruent_statements <-
+  fnc_task_list(task$congruent_party, 1, ids_democrat)
+
+task_list_democrat_incongruent_statements <-
+  fnc_task_list(task$congruent_party, 2, ids_democrat)
+
+task_list_democrat_neutral_statements <-
+  fnc_task_list(task$congruent_party, 3, ids_democrat)
+
+task_list_republican_congruent_statements <-
+  fnc_task_list(task$congruent_party, 1, ids_republican)
+
+task_list_republican_incongruent_statements <-
+  fnc_task_list(task$congruent_party, 2, ids_republican)
+
+task_list_republican_neutral_statements <-
+  fnc_task_list(task$congruent_party, 3, ids_republican)
+
+task_list_liberal_pooled_congruent_statements <-
+  fnc_task_list(task$congruent_ideology, 1, ids_liberal_pooled)
+
+task_list_liberal_pooled_incongruent_statements <-
+  fnc_task_list(task$congruent_ideology, 2, ids_liberal_pooled)
+
+task_list_liberal_pooled_neutral_statements <-
+  fnc_task_list(task$congruent_ideology, 3, ids_liberal_pooled)
+
+task_list_conservative_pooled_congruent_statements <-
+  fnc_task_list(task$congruent_ideology, 1, ids_conservative_pooled)
+
+task_list_conservative_pooled_incongruent_statements <-
+  fnc_task_list(task$congruent_ideology, 2, ids_conservative_pooled)
+
+task_list_conservative_pooled_neutral_statements <-
+  fnc_task_list(task$congruent_ideology, 3, ids_conservative_pooled)
+
+task_list_very_liberal_congruent_statements <-
+  fnc_task_list(task$congruent_ideology, 1, ids_very_liberal)
+
+task_list_very_liberal_incongruent_statements <-
+  fnc_task_list(task$congruent_ideology, 2, ids_very_liberal)
+
+task_list_very_liberal_neutral_statements <-
+  fnc_task_list(task$congruent_ideology, 3, ids_very_liberal)
+
+task_list_liberal_congruent_statements <-
+  fnc_task_list(task$congruent_ideology, 1, ids_liberal)
+
+task_list_liberal_incongruent_statements <-
+  fnc_task_list(task$congruent_ideology, 2, ids_liberal)
+
+task_list_liberal_neutral_statements <-
+  fnc_task_list(task$congruent_ideology, 3, ids_liberal)
+
+task_list_somewhat_liberal_congruent_statements <-
+  fnc_task_list(task$congruent_ideology, 1, ids_somewhat_liberal)
+
+task_list_somewhat_liberal_incongruent_statements <-
+  fnc_task_list(task$congruent_ideology, 2, ids_somewhat_liberal)
+
+task_list_somewhat_liberal_neutral_statements <-
+  fnc_task_list(task$congruent_ideology, 3, ids_somewhat_liberal)
+
+task_list_somewhat_conservative_congruent_statements <-
+  fnc_task_list(task$congruent_ideology, 1, ids_somewhat_conservative)
+
+task_list_somewhat_conservative_incongruent_statements <-
+  fnc_task_list(task$congruent_ideology, 2, ids_somewhat_conservative)
+
+task_list_somewhat_conservative_neutral_statements <-
+  fnc_task_list(task$congruent_ideology, 3, ids_somewhat_conservative)
+
+task_list_conservative_congruent_statements <-
+  fnc_task_list(task$congruent_ideology, 1, ids_conservative)
+
+task_list_conservative_incongruent_statements <-
+  fnc_task_list(task$congruent_ideology, 2, ids_conservative)
+
+task_list_conservative_neutral_statements <-
+  fnc_task_list(task$congruent_ideology, 3, ids_conservative)
+
+task_list_very_conservative_congruent_statements <-
+  fnc_task_list(task$congruent_ideology, 1, ids_very_conservative)
+
+task_list_very_conservative_incongruent_statements <-
+  fnc_task_list(task$congruent_ideology, 2, ids_very_conservative)
+
+task_list_very_conservative_neutral_statements <-
+  fnc_task_list(task$congruent_ideology, 3, ids_very_conservative)
+
+task_list_democrat_congruent_truth_statements <-
+  fnc_task_list(task$congruent_truth_party, 1, ids_democrat)
+
+task_list_democrat_incongruent_truth_statements <-
+  fnc_task_list(task$congruent_truth_party, 2, ids_democrat)
+
+task_list_democrat_neutral_truth_statements <-
+  fnc_task_list(task$congruent_truth_party, 3, ids_democrat)
+
+task_list_republican_congruent_truth_statements <-
+  fnc_task_list(task$congruent_truth_party, 1, ids_republican)
+
+task_list_republican_incongruent_truth_statements <-
+  fnc_task_list(task$congruent_truth_party, 2, ids_republican)
+
+task_list_republican_neutral_truth_statements <-
+  fnc_task_list(task$congruent_truth_party, 3, ids_republican)
+
+task_list_liberal_pooled_congruent_truth_statements <-
+  fnc_task_list(task$congruent_truth_ideology, 1, ids_liberal_pooled)
+
+task_list_liberal_pooled_incongruent_truth_statements <-
+  fnc_task_list(task$congruent_truth_ideology, 2, ids_liberal_pooled)
+
+task_list_liberal_pooled_neutral_truth_statements <-
+  fnc_task_list(task$congruent_truth_ideology, 3, ids_liberal_pooled)
+
+task_list_conservative_pooled_congruent_truth_statements <-
+  fnc_task_list(task$congruent_truth_ideology, 1, ids_conservative_pooled)
+
+task_list_conservative_pooled_incongruent_truth_statements <-
+  fnc_task_list(task$congruent_truth_ideology, 2, ids_conservative_pooled)
+
+task_list_conservative_pooled_neutral_truth_statements <-
+  fnc_task_list(task$congruent_truth_ideology, 3, ids_conservative_pooled)
+
+task_list_very_liberal_congruent_truth_statements <-
+  fnc_task_list(task$congruent_truth_ideology, 1, ids_very_liberal)
+
+task_list_very_liberal_incongruent_truth_statements <-
+  fnc_task_list(task$congruent_truth_ideology, 2, ids_very_liberal)
+
+task_list_very_liberal_neutral_truth_statements <-
+  fnc_task_list(task$congruent_truth_ideology, 3, ids_very_liberal)
+
+task_list_liberal_congruent_truth_statements <-
+  fnc_task_list(task$congruent_truth_ideology, 1, ids_liberal)
+
+task_list_liberal_incongruent_truth_statements <-
+  fnc_task_list(task$congruent_truth_ideology, 2, ids_liberal)
+
+task_list_liberal_neutral_truth_statements <-
+  fnc_task_list(task$congruent_truth_ideology, 3, ids_liberal)
+
+task_list_somewhat_liberal_congruent_truth_statements <-
+  fnc_task_list(task$congruent_truth_ideology, 1, ids_somewhat_liberal)
+
+task_list_somewhat_liberal_incongruent_truth_statements <-
+  fnc_task_list(task$congruent_truth_ideology, 2, ids_somewhat_liberal)
+
+task_list_somewhat_liberal_neutral_truth_statements <-
+  fnc_task_list(task$congruent_truth_ideology, 3, ids_somewhat_liberal)
+
+task_list_somewhat_conservative_congruent_truth_statements <-
+  fnc_task_list(task$congruent_truth_ideology, 1, ids_somewhat_conservative)
+
+task_list_somewhat_conservative_incongruent_truth_statements <-
+  fnc_task_list(task$congruent_truth_ideology, 2, ids_somewhat_conservative)
+
+task_list_somewhat_conservative_neutral_truth_statements <-
+  fnc_task_list(task$congruent_truth_ideology, 3, ids_somewhat_conservative)
+
+task_list_conservative_congruent_truth_statements <-
+  fnc_task_list(task$congruent_truth_ideology, 1, ids_conservative)
+
+task_list_conservative_incongruent_truth_statements <-
+  fnc_task_list(task$congruent_truth_ideology, 2, ids_conservative)
+
+task_list_conservative_neutral_truth_statements <-
+  fnc_task_list(task$congruent_ideology, 3, ids_conservative)
+
+task_list_very_conservative_congruent_truth_statements <-
+  fnc_task_list(task$congruent_truth_ideology, 1, ids_very_conservative)
+
+task_list_very_conservative_incongruent_truth_statements <-
+  fnc_task_list(task$congruent_truth_ideology, 2, ids_very_conservative)
+
+task_list_very_conservative_neutral_truth_statements <-
+  fnc_task_list(task$congruent_truth_ideology, 3, ids_very_conservative)
+
+```
+
+
+
+# Counts
+
+## Define wrapper function around `trials2counts`
+
+```{r fnc_trials2counts}
+fnc_trials2counts <- function(df) {
+  # prepare input lists
+  stimID <- pull(df, truth) %>% as.list()
+  response <- pull(df, dec) %>% as.list()
+  rating <- df %>%
+    transmute(conf = conf_high + 1) %>%
+    pull(conf) %>% as.list()
+  
+  # call `trials2counts`
+  output = trials2counts(
+    stimID,
+    response,
+    rating,
+    nRatings = 2,
+    padAmount = 0,
+    padCells = 0
+  )
+  return(output)
+}
+
+```
+
+## Compute counts
+
+```{r counts}
+# use `purrr::map` on nested data
+# all participants
+counts_all_participants <- task_list_all_participants %>% 
+  mutate(output = map(.x = data, .f = function(x) try(fnc_trials2counts(x))))
+counts_all_participants
+
+# six or more waves
+counts_six_or_more_waves <- task_list_six_or_more_waves %>% 
+  mutate(output = map(.x = data, .f = function(x) try(fnc_trials2counts(x))))
+counts_six_or_more_waves
+
+# twelve waves
+counts_twelve_waves <- task_list_twelve_waves %>% 
+  mutate(output = map(.x = data, .f = function(x) try(fnc_trials2counts(x))))
+counts_twelve_waves
+
+# Democrats
+counts_democrat <- task_list_democrat %>% 
+  mutate(output = map(.x = data, .f = function(x) try(fnc_trials2counts(x))))
+counts_democrat
+
+# Republicans
+counts_republican <- task_list_republican %>% 
+  mutate(output = map(.x = data, .f = function(x) try(fnc_trials2counts(x))))
+counts_republican
+
+# liberal pooled
+counts_liberal_pooled <- task_list_liberal_pooled %>% 
+  mutate(output = map(.x = data, .f = function(x) try(fnc_trials2counts(x))))
+counts_liberal_pooled
+
+# moderate
+counts_moderate <- task_list_moderate %>% 
+  mutate(output = map(.x = data, .f = function(x) try(fnc_trials2counts(x))))
+counts_moderate
+
+# conservative pooled
+counts_conservative_pooled <- task_list_conservative_pooled %>% 
+  mutate(output = map(.x = data, .f = function(x) try(fnc_trials2counts(x))))
+counts_conservative_pooled
+
+# very liberal
+counts_very_liberal <- task_list_very_liberal %>% 
+  mutate(output = map(.x = data, .f = function(x) try(fnc_trials2counts(x))))
+counts_very_liberal
+
+# liberal
+counts_liberal <- task_list_liberal %>% 
+  mutate(output = map(.x = data, .f = function(x) try(fnc_trials2counts(x))))
+counts_liberal
+
+# somewhat liberal
+counts_somewhat_liberal <- task_list_somewhat_liberal %>% 
+  mutate(output = map(.x = data, .f = function(x) try(fnc_trials2counts(x))))
+counts_somewhat_liberal
+
+# somewhat conservative
+counts_somewhat_conservative <- task_list_somewhat_conservative %>% 
+  mutate(output = map(.x = data, .f = function(x) try(fnc_trials2counts(x))))
+counts_somewhat_conservative
+
+# conservative
+counts_conservative <- task_list_conservative %>% 
+  mutate(output = map(.x = data, .f = function(x) try(fnc_trials2counts(x))))
+counts_conservative
+
+# very conservative
+counts_very_conservative <- task_list_very_conservative %>% 
+  mutate(output = map(.x = data, .f = function(x) try(fnc_trials2counts(x))))
+counts_very_conservative
+
+# congruent statements (party only)
+counts_congruent_party_statements <- task_list_congruent_party_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_congruent_party_statements
+
+# incongruent statements (party only)
+counts_incongruent_party_statements <- task_list_incongruent_party_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_incongruent_party_statements
+
+# neutral statements (party only)
+counts_neutral_party_statements <- task_list_neutral_party_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_neutral_party_statements
+
+# congruent statements (ideology only)
+counts_congruent_ideology_statements <- task_list_congruent_ideology_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_congruent_ideology_statements
+
+# incongruent statements (ideology only)
+counts_incongruent_ideology_statements <- task_list_incongruent_ideology_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_incongruent_ideology_statements
+
+# neutral statements (ideology only)
+counts_neutral_ideology_statements <- task_list_neutral_ideology_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_neutral_ideology_statements
+
+# congruent statements (party*truth)
+counts_congruent_truth_party_statements <- task_list_congruent_truth_party_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_congruent_truth_party_statements
+
+# incongruent statements (party*truth)
+counts_incongruent_truth_party_statements <- task_list_incongruent_truth_party_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_incongruent_truth_party_statements
+
+# neutral statements (party*truth)
+counts_neutral_truth_party_statements <- task_list_neutral_truth_party_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_neutral_truth_party_statements
+
+# congruent statements (ideology*truth)
+counts_congruent_truth_ideology_statements <- task_list_congruent_truth_ideology_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_congruent_truth_ideology_statements
+
+# incongruent statements (ideology*truth)
+counts_incongruent_truth_ideology_statements <- task_list_incongruent_truth_ideology_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_incongruent_truth_ideology_statements
+
+# neutral statements (ideology*truth)
+counts_neutral_truth_ideology_statements <- task_list_neutral_truth_ideology_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_neutral_truth_ideology_statements
+
+# recognized statements
+counts_recognized_statements <- task_list_recognized_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_recognized_statements
+
+# unrecognized statements
+counts_unrecognized_statements <- task_list_unrecognized_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_unrecognized_statements
+
+# satire statements
+counts_satire_statements <- task_list_satire_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_satire_statements
+
+# non-satire statements
+counts_non_satire_statements <- task_list_non_satire_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_non_satire_statements
+
+# Democrats: congruent statements (party only)
+counts_democrat_congruent_statements <- task_list_democrat_congruent_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_democrat_congruent_statements
+
+# Democrats: incongruent statements (party only)
+counts_democrat_incongruent_statements <- task_list_democrat_incongruent_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_democrat_incongruent_statements
+
+# Democrats: neutral statements (party only)
+counts_democrat_neutral_statements <- task_list_democrat_neutral_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_democrat_neutral_statements
+
+# Republicans: congruent statements (party only)
+counts_republican_congruent_statements <- task_list_republican_congruent_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_republican_congruent_statements
+
+# Republicans: incongruent statements (party only)
+counts_republican_incongruent_statements <- task_list_republican_incongruent_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_republican_incongruent_statements
+
+# Republicans: neutral statements (party only)
+counts_republican_neutral_statements <- task_list_republican_neutral_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_republican_neutral_statements
+
+# liberal pooled: congruent statements (ideology only)
+counts_liberal_pooled_congruent_statements <- task_list_liberal_pooled_congruent_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_liberal_pooled_congruent_statements
+
+# liberal pooled: incongruent statements (ideology only)
+counts_liberal_pooled_incongruent_statements <- task_list_liberal_pooled_incongruent_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_liberal_pooled_incongruent_statements
+
+# liberal pooled: neutral statements (ideology only)
+counts_liberal_pooled_neutral_statements <- task_list_liberal_pooled_neutral_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_liberal_pooled_neutral_statements
+
+# conservative pooled: congruent statements (ideology only)
+counts_conservative_pooled_congruent_statements <- task_list_conservative_pooled_congruent_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_conservative_pooled_congruent_statements
+
+# conservative pooled: incongruent statements (ideology only)
+counts_conservative_pooled_incongruent_statements <- task_list_conservative_pooled_incongruent_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_conservative_pooled_incongruent_statements
+
+# conservative pooled: neutral statements (ideology only)
+counts_conservative_pooled_neutral_statements <- task_list_conservative_pooled_neutral_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_conservative_pooled_neutral_statements
+
+# very liberal: congruent statements (ideology only)
+counts_very_liberal_congruent_statements <- task_list_very_liberal_congruent_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_very_liberal_congruent_statements
+
+# very liberal: incongruent statements (ideology only)
+counts_very_liberal_incongruent_statements <- task_list_very_liberal_incongruent_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_very_liberal_incongruent_statements
+
+# very liberal: neutral statements (ideology only)
+counts_very_liberal_neutral_statements <- task_list_very_liberal_neutral_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_very_liberal_neutral_statements
+
+# liberal: congruent statements (ideology only)
+counts_liberal_congruent_statements <- task_list_liberal_congruent_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_liberal_congruent_statements
+
+# liberal: incongruent statements (ideology only)
+counts_liberal_incongruent_statements <- task_list_liberal_incongruent_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_liberal_incongruent_statements
+
+# liberal: neutral statements (ideology only)
+counts_liberal_neutral_statements <- task_list_liberal_neutral_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_liberal_neutral_statements
+
+# somewhat liberal: congruent statements (ideology only)
+counts_somewhat_liberal_congruent_statements <- task_list_somewhat_liberal_congruent_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_somewhat_liberal_congruent_statements
+
+# somewhat liberal: incongruent statements (ideology only)
+counts_somewhat_liberal_incongruent_statements <- task_list_somewhat_liberal_incongruent_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_somewhat_liberal_incongruent_statements
+
+# somewhat liberal: neutral statements (ideology only)
+counts_somewhat_liberal_neutral_statements <- task_list_somewhat_liberal_neutral_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_somewhat_liberal_neutral_statements
+
+# somewhat conservative: congruent statements (ideology only)
+counts_somewhat_conservative_congruent_statements <- task_list_somewhat_conservative_congruent_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_somewhat_conservative_congruent_statements
+
+# somewhat conservative: incongruent statements (ideology only)
+counts_somewhat_conservative_incongruent_statements <- task_list_somewhat_conservative_incongruent_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_somewhat_conservative_incongruent_statements
+
+# somewhat conservative: neutral statements (ideology only)
+counts_somewhat_conservative_neutral_statements <- task_list_somewhat_conservative_neutral_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_somewhat_conservative_neutral_statements
+
+# conservative: congruent statements (ideology only)
+counts_conservative_congruent_statements <- task_list_conservative_congruent_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_conservative_congruent_statements
+
+# conservative: incongruent statements (ideology only)
+counts_conservative_incongruent_statements <- task_list_conservative_incongruent_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_conservative_incongruent_statements
+
+# conservative: neutral statements (ideology only)
+counts_conservative_neutral_statements <- task_list_conservative_neutral_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_conservative_neutral_statements
+
+# very conservative: congruent statements (ideology only)
+counts_very_conservative_congruent_statements <- task_list_very_conservative_congruent_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_very_conservative_congruent_statements
+
+# very conservative: incongruent statements (ideology only)
+counts_very_conservative_incongruent_statements <- task_list_very_conservative_incongruent_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_very_conservative_incongruent_statements
+
+# very conservative: neutral statements (ideology only)
+counts_very_conservative_neutral_statements <- task_list_very_conservative_neutral_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_very_conservative_neutral_statements
+
+# Democrats: congruent statements (party*truth)
+counts_democrat_congruent_truth_statements <- task_list_democrat_congruent_truth_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_democrat_congruent_truth_statements
+
+# Democrats: incongruent statements (party*truth)
+counts_democrat_incongruent_truth_statements <- task_list_democrat_incongruent_truth_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_democrat_incongruent_truth_statements
+
+# Democrats: neutral statements (party*truth)
+counts_democrat_neutral_truth_statements <- task_list_democrat_neutral_truth_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_democrat_neutral_truth_statements
+
+# Republicans: congruent statements (party*truth)
+counts_republican_congruent_truth_statements <- task_list_republican_congruent_truth_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_republican_congruent_truth_statements
+
+# Republicans: incongruent statements (party*truth)
+counts_republican_incongruent_truth_statements <- task_list_republican_incongruent_truth_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_republican_incongruent_truth_statements
+
+# Republicans: neutral statements (party*truth)
+counts_republican_neutral_truth_statements <- task_list_republican_neutral_truth_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_republican_neutral_truth_statements
+
+# liberal pooled: congruent statements (ideology*truth)
+counts_liberal_pooled_congruent_truth_statements <- task_list_liberal_pooled_congruent_truth_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_liberal_pooled_congruent_truth_statements
+
+# liberal pooled: incongruent statements (ideology*truth)
+counts_liberal_pooled_incongruent_truth_statements <- task_list_liberal_pooled_incongruent_truth_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_liberal_pooled_incongruent_truth_statements
+
+# liberal pooled: neutral statements (ideology*truth)
+counts_liberal_pooled_neutral_truth_statements <- task_list_liberal_pooled_neutral_truth_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_liberal_pooled_neutral_truth_statements
+
+# conservative pooled: congruent statements (ideology*truth)
+counts_conservative_pooled_congruent_truth_statements <- task_list_conservative_pooled_congruent_truth_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_conservative_pooled_congruent_truth_statements
+
+# conservative pooled: incongruent statements (ideology*truth)
+counts_conservative_pooled_incongruent_truth_statements <- task_list_conservative_pooled_incongruent_truth_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_conservative_pooled_incongruent_truth_statements
+
+# conservative pooled: neutral statements (ideology*truth)
+counts_conservative_pooled_neutral_truth_statements <- task_list_conservative_pooled_neutral_truth_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_conservative_pooled_neutral_truth_statements
+
+# very liberal: congruent statements (ideology*truth)
+counts_very_liberal_congruent_truth_statements <- task_list_very_liberal_congruent_truth_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_very_liberal_congruent_truth_statements
+
+# very liberal: incongruent statements (ideology*truth)
+counts_very_liberal_incongruent_truth_statements <- task_list_very_liberal_incongruent_truth_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_very_liberal_incongruent_truth_statements
+
+# very liberal: neutral statements (ideology*truth)
+counts_very_liberal_neutral_truth_statements <- task_list_very_liberal_neutral_truth_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_very_liberal_neutral_truth_statements
+
+# liberal: congruent statements (ideology*truth)
+counts_liberal_congruent_truth_statements <- task_list_liberal_congruent_truth_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_liberal_congruent_truth_statements
+
+# liberal: incongruent statements (ideology*truth)
+counts_liberal_incongruent_truth_statements <- task_list_liberal_incongruent_truth_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_liberal_incongruent_truth_statements
+
+# liberal: neutral statements (ideology*truth)
+counts_liberal_neutral_truth_statements <- task_list_liberal_neutral_truth_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_liberal_neutral_truth_statements
+
+# somewhat liberal: congruent statements (ideology*truth)
+counts_somewhat_liberal_congruent_truth_statements <- task_list_somewhat_liberal_congruent_truth_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_somewhat_liberal_congruent_truth_statements
+
+# somewhat liberal: incongruent statements (ideology*truth)
+counts_somewhat_liberal_incongruent_truth_statements <- task_list_somewhat_liberal_incongruent_truth_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_somewhat_liberal_incongruent_truth_statements
+
+# somewhat liberal: neutral statements (ideology*truth)
+counts_somewhat_liberal_neutral_truth_statements <- task_list_somewhat_liberal_neutral_truth_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_somewhat_liberal_neutral_truth_statements
+
+# somewhat conservative: congruent statements (ideology*truth)
+counts_somewhat_conservative_congruent_truth_statements <- task_list_somewhat_conservative_congruent_truth_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_somewhat_conservative_congruent_truth_statements
+
+# somewhat conservative: incongruent statements (ideology*truth)
+counts_somewhat_conservative_incongruent_truth_statements <- task_list_somewhat_conservative_incongruent_truth_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_somewhat_conservative_incongruent_truth_statements
+
+# somewhat conservative: neutral statements (ideology*truth)
+counts_somewhat_conservative_neutral_truth_statements <- task_list_somewhat_conservative_neutral_truth_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_somewhat_conservative_neutral_truth_statements
+
+# conservative: congruent statements (ideology*truth)
+counts_conservative_congruent_truth_statements <- task_list_conservative_congruent_truth_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_conservative_congruent_truth_statements
+
+# conservative: incongruent statements (ideology*truth)
+counts_conservative_incongruent_truth_statements <- task_list_conservative_incongruent_truth_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_conservative_incongruent_truth_statements
+
+# conservative: neutral statements (ideology*truth)
+counts_conservative_neutral_truth_statements <- task_list_conservative_neutral_truth_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_conservative_neutral_truth_statements
+
+# very conservative: congruent statements (ideology*truth)
+counts_very_conservative_congruent_truth_statements <- task_list_very_conservative_congruent_truth_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_very_conservative_congruent_truth_statements
+
+# very conservative: incongruent statements (ideology*truth)
+counts_very_conservative_incongruent_truth_statements <- task_list_very_conservative_incongruent_truth_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_very_conservative_incongruent_truth_statements
+
+# very conservative: neutral statements (ideology*truth)
+counts_very_conservative_neutral_truth_statements <- task_list_very_conservative_neutral_truth_statements %>% 
+  mutate(output = map(.x = data, .f = fnc_trials2counts))
+counts_very_conservative_neutral_truth_statements
+
+```
+
+
+
+# Write to disk
+
+```{r write_to_disk}
+write_rds(counts_all_participants, here("output/counts/counts_all_participants.rds"), compress = "gz")
+write_rds(counts_six_or_more_waves, here("output/counts/counts_six_or_more_waves.rds"), compress = "gz")
+write_rds(counts_twelve_waves, here("output/counts/counts_twelve_waves.rds"), compress = "gz")
+write_rds(counts_democrat, here("output/counts/counts_democrat.rds"), compress = "gz")
+write_rds(counts_republican, here("output/counts/counts_republican.rds"), compress = "gz")
+write_rds(counts_liberal_pooled, here("output/counts/counts_liberal_pooled.rds"), compress = "gz")
+write_rds(counts_moderate, here("output/counts/counts_moderate.rds"), compress = "gz")
+write_rds(counts_conservative_pooled, here("output/counts/counts_conservative_pooled.rds"), compress = "gz")
+write_rds(counts_very_liberal, here("output/counts/counts_very_liberal.rds"), compress = "gz")
+write_rds(counts_liberal, here("output/counts/counts_liberal.rds"), compress = "gz")
+write_rds(counts_somewhat_liberal, here("output/counts/counts_somewhat_liberal.rds"), compress = "gz")
+write_rds(counts_somewhat_conservative, here("output/counts/counts_somewhat_conservative.rds"), compress = "gz")
+write_rds(counts_conservative, here("output/counts/counts_conservative.rds"), compress = "gz")
+write_rds(counts_very_conservative, here("output/counts/counts_very_conservative.rds"), compress = "gz")
+write_rds(counts_congruent_party_statements, here("output/counts/counts_congruent_party_statements.rds"), compress = "gz")
+write_rds(counts_incongruent_party_statements, here("output/counts/counts_incongruent_party_statements.rds"), compress = "gz")
+write_rds(counts_neutral_party_statements, here("output/counts/counts_neutral_party_statements.rds"), compress = "gz")
+write_rds(counts_congruent_ideology_statements, here("output/counts/counts_congruent_ideology_statements.rds"), compress = "gz")
+write_rds(counts_incongruent_ideology_statements, here("output/counts/counts_incongruent_ideology_statements.rds"), compress = "gz")
+write_rds(counts_neutral_ideology_statements, here("output/counts/counts_neutral_ideology_statements.rds"), compress = "gz")
+write_rds(counts_congruent_truth_party_statements, here("output/counts/counts_congruent_truth_party_statements.rds"), compress = "gz")
+write_rds(counts_incongruent_truth_party_statements, here("output/counts/counts_incongruent_truth_party_statements.rds"), compress = "gz")
+write_rds(counts_neutral_truth_party_statements, here("output/counts/counts_neutral_truth_party_statements.rds"), compress = "gz")
+write_rds(counts_congruent_truth_ideology_statements, here("output/counts/counts_congruent_truth_ideology_statements.rds"), compress = "gz")
+write_rds(counts_incongruent_truth_ideology_statements, here("output/counts/counts_incongruent_truth_ideology_statements.rds"), compress = "gz")
+write_rds(counts_neutral_truth_ideology_statements, here("output/counts/counts_neutral_truth_ideology_statements.rds"), compress = "gz")
+write_rds(counts_recognized_statements, here("output/counts/counts_recognized_statements.rds"), compress = "gz")
+write_rds(counts_unrecognized_statements, here("output/counts/counts_unrecognized_statements.rds"), compress = "gz")
+write_rds(counts_satire_statements, here("output/counts/counts_satire_statements.rds"), compress = "gz")
+write_rds(counts_non_satire_statements, here("output/counts/counts_non_satire_statements.rds"), compress = "gz")
+write_rds(counts_democrat_congruent_statements, here("output/counts/counts_democrat_congruent_statements.rds"), compress = "gz")
+write_rds(counts_democrat_incongruent_statements, here("output/counts/counts_democrat_incongruent_statements.rds"), compress = "gz")
+write_rds(counts_democrat_neutral_statements, here("output/counts/counts_democrat_neutral_statements.rds"), compress = "gz")
+write_rds(counts_republican_congruent_statements, here("output/counts/counts_republican_congruent_statements.rds"), compress = "gz")
+write_rds(counts_republican_incongruent_statements, here("output/counts/counts_republican_incongruent_statements.rds"), compress = "gz")
+write_rds(counts_republican_neutral_statements, here("output/counts/counts_republican_neutral_statements.rds"), compress = "gz")
+write_rds(counts_liberal_pooled_congruent_statements, here("output/counts/counts_liberal_pooled_congruent_statements.rds"), compress = "gz")
+write_rds(counts_liberal_pooled_incongruent_statements, here("output/counts/counts_liberal_pooled_incongruent_statements.rds"), compress = "gz")
+write_rds(counts_liberal_pooled_neutral_statements, here("output/counts/counts_liberal_pooled_neutral_statements.rds"), compress = "gz")
+write_rds(counts_conservative_pooled_congruent_statements, here("output/counts/counts_conservative_pooled_congruent_statements.rds"), compress = "gz")
+write_rds(counts_conservative_pooled_incongruent_statements, here("output/counts/counts_conservative_pooled_incongruent_statements.rds"), compress = "gz")
+write_rds(counts_conservative_pooled_neutral_statements, here("output/counts/counts_conservative_pooled_neutral_statements.rds"), compress = "gz")
+write_rds(counts_very_liberal_congruent_statements, here("output/counts/counts_very_liberal_congruent_statements.rds"), compress = "gz")
+write_rds(counts_very_liberal_incongruent_statements, here("output/counts/counts_very_liberal_incongruent_statements.rds"), compress = "gz")
+write_rds(counts_very_liberal_neutral_statements, here("output/counts/counts_very_liberal_neutral_statements.rds"), compress = "gz")
+write_rds(counts_liberal_congruent_statements, here("output/counts/counts_liberal_congruent_statements.rds"), compress = "gz")
+write_rds(counts_liberal_incongruent_statements, here("output/counts/counts_liberal_incongruent_statements.rds"), compress = "gz")
+write_rds(counts_liberal_neutral_statements, here("output/counts/counts_liberal_neutral_statements.rds"), compress = "gz")
+write_rds(counts_somewhat_liberal_congruent_statements, here("output/counts/counts_somewhat_liberal_congruent_statements.rds"), compress = "gz")
+write_rds(counts_somewhat_liberal_incongruent_statements, here("output/counts/counts_somewhat_liberal_incongruent_statements.rds"), compress = "gz")
+write_rds(counts_somewhat_liberal_neutral_statements, here("output/counts/counts_somewhat_liberal_neutral_statements.rds"), compress = "gz")
+write_rds(counts_somewhat_conservative_congruent_statements, here("output/counts/counts_somewhat_conservative_congruent_statements.rds"), compress = "gz")
+write_rds(counts_somewhat_conservative_incongruent_statements, here("output/counts/counts_somewhat_conservative_incongruent_statements.rds"), compress = "gz")
+write_rds(counts_somewhat_conservative_neutral_statements, here("output/counts/counts_somewhat_conservative_neutral_statements.rds"), compress = "gz")
+write_rds(counts_conservative_congruent_statements, here("output/counts/counts_conservative_congruent_statements.rds"), compress = "gz")
+write_rds(counts_conservative_incongruent_statements, here("output/counts/counts_conservative_incongruent_statements.rds"), compress = "gz")
+write_rds(counts_conservative_neutral_statements, here("output/counts/counts_conservative_neutral_statements.rds"), compress = "gz")
+write_rds(counts_very_conservative_congruent_statements, here("output/counts/counts_very_conservative_congruent_statements.rds"), compress = "gz")
+write_rds(counts_very_conservative_incongruent_statements, here("output/counts/counts_very_conservative_incongruent_statements.rds"), compress = "gz")
+write_rds(counts_very_conservative_neutral_statements, here("output/counts/counts_very_conservative_neutral_statements.rds"), compress = "gz")
+write_rds(counts_democrat_congruent_truth_statements, here("output/counts/counts_democrat_congruent_truth_statements.rds"), compress = "gz")
+write_rds(counts_democrat_incongruent_truth_statements, here("output/counts/counts_democrat_incongruent_truth_statements.rds"), compress = "gz")
+write_rds(counts_democrat_neutral_truth_statements, here("output/counts/counts_democrat_neutral_truth_statements.rds"), compress = "gz")
+write_rds(counts_republican_congruent_truth_statements, here("output/counts/counts_republican_congruent_truth_statements.rds"), compress = "gz")
+write_rds(counts_republican_incongruent_truth_statements, here("output/counts/counts_republican_incongruent_truth_statements.rds"), compress = "gz")
+write_rds(counts_republican_neutral_truth_statements, here("output/counts/counts_republican_neutral_truth_statements.rds"), compress = "gz")
+write_rds(counts_liberal_pooled_congruent_truth_statements, here("output/counts/counts_liberal_pooled_congruent_truth_statements.rds"), compress = "gz")
+write_rds(counts_liberal_pooled_incongruent_truth_statements, here("output/counts/counts_liberal_pooled_incongruent_truth_statements.rds"), compress = "gz")
+write_rds(counts_liberal_pooled_neutral_truth_statements, here("output/counts/counts_liberal_pooled_neutral_truth_statements.rds"), compress = "gz")
+write_rds(counts_conservative_pooled_congruent_truth_statements, here("output/counts/counts_conservative_pooled_congruent_truth_statements.rds"), compress = "gz")
+write_rds(counts_conservative_pooled_incongruent_truth_statements, here("output/counts/counts_conservative_pooled_incongruent_truth_statements.rds"), compress = "gz")
+write_rds(counts_conservative_pooled_neutral_truth_statements, here("output/counts/counts_conservative_pooled_neutral_truth_statements.rds"), compress = "gz")
+write_rds(counts_very_liberal_congruent_truth_statements, here("output/counts/counts_very_liberal_congruent_truth_statements.rds"), compress = "gz")
+write_rds(counts_very_liberal_incongruent_truth_statements, here("output/counts/counts_very_liberal_incongruent_truth_statements.rds"), compress = "gz")
+write_rds(counts_very_liberal_neutral_truth_statements, here("output/counts/counts_very_liberal_neutral_truth_statements.rds"), compress = "gz")
+write_rds(counts_liberal_congruent_truth_statements, here("output/counts/counts_liberal_congruent_truth_statements.rds"), compress = "gz")
+write_rds(counts_liberal_incongruent_truth_statements, here("output/counts/counts_liberal_incongruent_truth_statements.rds"), compress = "gz")
+write_rds(counts_liberal_neutral_truth_statements, here("output/counts/counts_liberal_neutral_truth_statements.rds"), compress = "gz")
+write_rds(counts_somewhat_liberal_congruent_truth_statements, here("output/counts/counts_somewhat_liberal_congruent_truth_statements.rds"), compress = "gz")
+write_rds(counts_somewhat_liberal_incongruent_truth_statements, here("output/counts/counts_somewhat_liberal_incongruent_truth_statements.rds"), compress = "gz")
+write_rds(counts_somewhat_liberal_neutral_truth_statements, here("output/counts/counts_somewhat_liberal_neutral_truth_statements.rds"), compress = "gz")
+write_rds(counts_somewhat_conservative_congruent_truth_statements, here("output/counts/counts_somewhat_conservative_congruent_truth_statements.rds"), compress = "gz")
+write_rds(counts_somewhat_conservative_incongruent_truth_statements, here("output/counts/counts_somewhat_conservative_incongruent_truth_statements.rds"), compress = "gz")
+write_rds(counts_somewhat_conservative_neutral_truth_statements, here("output/counts/counts_somewhat_conservative_neutral_truth_statements.rds"), compress = "gz")
+write_rds(counts_conservative_congruent_truth_statements, here("output/counts/counts_conservative_congruent_truth_statements.rds"), compress = "gz")
+write_rds(counts_conservative_incongruent_truth_statements, here("output/counts/counts_conservative_incongruent_truth_statements.rds"), compress = "gz")
+write_rds(counts_conservative_neutral_truth_statements, here("output/counts/counts_conservative_neutral_truth_statements.rds"), compress = "gz")
+write_rds(counts_very_conservative_congruent_truth_statements, here("output/counts/counts_very_conservative_congruent_truth_statements.rds"), compress = "gz")
+write_rds(counts_very_conservative_incongruent_truth_statements, here("output/counts/counts_very_conservative_incongruent_truth_statements.rds"), compress = "gz")
+write_rds(counts_very_conservative_neutral_truth_statements, here("output/counts/counts_very_conservative_neutral_truth_statements.rds"), compress = "gz")
+
+```

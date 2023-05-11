@@ -1,0 +1,35 @@
+name: confidence-and-misinformation
+output_dir: ../public
+navbar:
+  title: confidence-and-misinformation
+  left:
+  - text: Home
+    href: index.html
+  - text: Make data
+    href: make_data.html
+  - text: Basic descriptives
+    href: basic_descriptives.html
+  - text: Basic measures
+    href: basic_measures.html
+  - text: H1 - Overall insight
+    href: H1_overall_insight.html
+  - text: H2 - Political antecedents
+    href: H2_political_antecedents.html
+  - text: H3 - Predictors
+    href: H3_predictors.html
+  - text: Robustness checks
+    href: robustness_checks.html
+  - text: About
+    href: about.html
+  - text: License
+    href: license.html
+  right:
+  - icon: fab fa-gitlab
+    text: Source code
+    href: https://arc-git.mpib-berlin.mpg.de/ai_society/confidence-and-misinformation
+output:
+  workflowr::wflow_html:
+    toc: yes
+    toc_float: yes
+    theme: cosmo
+    highlight: textmate

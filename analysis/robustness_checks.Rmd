@@ -1,0 +1,485 @@
+---
+title: "Robustness checks"
+site: workflowr::wflow_site
+output:
+  workflowr::wflow_html:
+    code_folding: hide
+    number_sections: yes
+    toc: yes
+    toc_depth: 3
+editor_options:
+  chunk_output_type: console
+---
+
+
+
+# Setup
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = TRUE,
+	cache = FALSE
+)
+
+```
+
+
+
+# Source `dependencies.R`
+
+```{r dependencies, message=FALSE, code=readr::read_lines(here::here("code/_dependencies.R"))}
+source(here::here("code/_dependencies.R"))
+
+```
+
+
+
+# Load data
+
+```{r load_data}
+# load dat
+dat <- read_rds(here::here("output/dat.rds"))
+
+# group-level model
+metad_group <- read_rds(here::here("output/models/group/metad_group.rds"))
+
+# individual-level mratio cleaned models
+metad_indiv_all_participants_m_ratio_cleaned <- read_rds(here::here("output/models/indiv/mratio_cleaned/metad_indiv_all_participants_m_ratio_cleaned.rds"))
+metad_indiv_six_or_more_waves_m_ratio_cleaned <- read_rds(here::here("output/models/indiv/mratio_cleaned/metad_indiv_six_or_more_waves_m_ratio_cleaned.rds"))
+metad_indiv_twelve_waves_m_ratio_cleaned <- read_rds(here::here("output/models/indiv/mratio_cleaned/metad_indiv_twelve_waves_m_ratio_cleaned.rds"))
+metad_indiv_congruent_party_statements_m_ratio_cleaned <- read_rds(here::here("output/models/indiv/mratio_cleaned/metad_indiv_congruent_party_statements_m_ratio_cleaned.rds"))
+metad_indiv_incongruent_party_statements_m_ratio_cleaned <- read_rds(here::here("output/models/indiv/mratio_cleaned/metad_indiv_incongruent_party_statements_m_ratio_cleaned.rds"))
+metad_indiv_neutral_party_statements_m_ratio_cleaned <- read_rds(here::here("output/models/indiv/mratio_cleaned/metad_indiv_neutral_party_statements_m_ratio_cleaned.rds"))
+metad_indiv_congruent_ideology_statements_m_ratio_cleaned <- read_rds(here::here("output/models/indiv/mratio_cleaned/metad_indiv_congruent_ideology_statements_m_ratio_cleaned.rds"))
+metad_indiv_incongruent_ideology_statements_m_ratio_cleaned <- read_rds(here::here("output/models/indiv/mratio_cleaned/metad_indiv_incongruent_ideology_statements_m_ratio_cleaned.rds"))
+metad_indiv_neutral_ideology_statements_m_ratio_cleaned <- read_rds(here::here("output/models/indiv/mratio_cleaned/metad_indiv_neutral_ideology_statements_m_ratio_cleaned.rds"))
+metad_indiv_congruent_truth_party_statements_m_ratio_cleaned <- read_rds(here::here("output/models/indiv/mratio_cleaned/metad_indiv_congruent_truth_party_statements_m_ratio_cleaned.rds"))
+metad_indiv_incongruent_truth_party_statements_m_ratio_cleaned <- read_rds(here::here("output/models/indiv/mratio_cleaned/metad_indiv_incongruent_truth_party_statements_m_ratio_cleaned.rds"))
+metad_indiv_neutral_truth_party_statements_m_ratio_cleaned <- read_rds(here::here("output/models/indiv/mratio_cleaned/metad_indiv_neutral_truth_party_statements_m_ratio_cleaned.rds"))
+metad_indiv_congruent_truth_ideology_statements_m_ratio_cleaned <- read_rds(here::here("output/models/indiv/mratio_cleaned/metad_indiv_congruent_truth_ideology_statements_m_ratio_cleaned.rds"))
+metad_indiv_incongruent_truth_ideology_statements_m_ratio_cleaned <- read_rds(here::here("output/models/indiv/mratio_cleaned/metad_indiv_incongruent_truth_ideology_statements_m_ratio_cleaned.rds"))
+metad_indiv_neutral_truth_ideology_statements_m_ratio_cleaned <- read_rds(here::here("output/models/indiv/mratio_cleaned/metad_indiv_neutral_truth_ideology_statements_m_ratio_cleaned.rds"))
+metad_indiv_recognized_statements_m_ratio_cleaned <- read_rds(here::here("output/models/indiv/mratio_cleaned/metad_indiv_recognized_statements_m_ratio_cleaned.rds"))
+metad_indiv_non_recognized_statements_m_ratio_cleaned <- read_rds(here::here("output/models/indiv/mratio_cleaned/metad_indiv_non_recognized_statements_m_ratio_cleaned.rds"))
+metad_indiv_satire_statements_m_ratio_cleaned <- read_rds(here::here("output/models/indiv/mratio_cleaned/metad_indiv_satire_statements_m_ratio_cleaned.rds"))
+metad_indiv_non_satire_statements_m_ratio_cleaned <- read_rds(here::here("output/models/indiv/mratio_cleaned/metad_indiv_non_satire_statements_m_ratio_cleaned.rds"))
+
+# individual-level Mdiff cleaned models
+metad_indiv_all_participants_m_diff_cleaned <- read_rds(here::here("output/models/indiv/mdiff_cleaned/metad_indiv_all_participants_m_diff_cleaned.rds"))
+metad_indiv_six_or_more_waves_m_diff_cleaned <- read_rds(here::here("output/models/indiv/mdiff_cleaned/metad_indiv_six_or_more_waves_m_diff_cleaned.rds"))
+metad_indiv_twelve_waves_m_diff_cleaned <- read_rds(here::here("output/models/indiv/mdiff_cleaned/metad_indiv_twelve_waves_m_diff_cleaned.rds"))
+metad_indiv_congruent_party_statements_m_diff_cleaned <- read_rds(here::here("output/models/indiv/mdiff_cleaned/metad_indiv_congruent_party_statements_m_diff_cleaned.rds"))
+metad_indiv_incongruent_party_statements_m_diff_cleaned <- read_rds(here::here("output/models/indiv/mdiff_cleaned/metad_indiv_incongruent_party_statements_m_diff_cleaned.rds"))
+metad_indiv_neutral_party_statements_m_diff_cleaned <- read_rds(here::here("output/models/indiv/mdiff_cleaned/metad_indiv_neutral_party_statements_m_diff_cleaned.rds"))
+metad_indiv_congruent_ideology_statements_m_diff_cleaned <- read_rds(here::here("output/models/indiv/mdiff_cleaned/metad_indiv_congruent_ideology_statements_m_diff_cleaned.rds"))
+metad_indiv_incongruent_ideology_statements_m_diff_cleaned <- read_rds(here::here("output/models/indiv/mdiff_cleaned/metad_indiv_incongruent_ideology_statements_m_diff_cleaned.rds"))
+metad_indiv_neutral_ideology_statements_m_diff_cleaned <- read_rds(here::here("output/models/indiv/mdiff_cleaned/metad_indiv_neutral_ideology_statements_m_diff_cleaned.rds"))
+metad_indiv_congruent_truth_party_statements_m_diff_cleaned <- read_rds(here::here("output/models/indiv/mdiff_cleaned/metad_indiv_congruent_truth_party_statements_m_diff_cleaned.rds"))
+metad_indiv_incongruent_truth_party_statements_m_diff_cleaned <- read_rds(here::here("output/models/indiv/mdiff_cleaned/metad_indiv_incongruent_truth_party_statements_m_diff_cleaned.rds"))
+metad_indiv_neutral_truth_party_statements_m_diff_cleaned <- read_rds(here::here("output/models/indiv/mdiff_cleaned/metad_indiv_neutral_truth_party_statements_m_diff_cleaned.rds"))
+metad_indiv_congruent_truth_ideology_statements_m_diff_cleaned <- read_rds(here::here("output/models/indiv/mdiff_cleaned/metad_indiv_congruent_truth_ideology_statements_m_diff_cleaned.rds"))
+metad_indiv_incongruent_truth_ideology_statements_m_diff_cleaned <- read_rds(here::here("output/models/indiv/mdiff_cleaned/metad_indiv_incongruent_truth_ideology_statements_m_diff_cleaned.rds"))
+metad_indiv_neutral_truth_ideology_statements_m_diff_cleaned <- read_rds(here::here("output/models/indiv/mdiff_cleaned/metad_indiv_neutral_truth_ideology_statements_m_diff_cleaned.rds"))
+metad_indiv_recognized_statements_m_diff_cleaned <- read_rds(here::here("output/models/indiv/mdiff_cleaned/metad_indiv_recognized_statements_m_diff_cleaned.rds"))
+metad_indiv_non_recognized_statements_m_diff_cleaned <- read_rds(here::here("output/models/indiv/mdiff_cleaned/metad_indiv_non_recognized_statements_m_diff_cleaned.rds"))
+metad_indiv_satire_statements_m_diff_cleaned <- read_rds(here::here("output/models/indiv/mdiff_cleaned/metad_indiv_satire_statements_m_diff_cleaned.rds"))
+metad_indiv_non_satire_statements_m_diff_cleaned <- read_rds(here::here("output/models/indiv/mdiff_cleaned/metad_indiv_non_satire_statements_m_diff_cleaned.rds"))
+
+```
+
+
+
+# Group-level models
+
+```{r group_models}
+# create df for all participants
+df_all_participants <- metad_group %>%
+  filter(group %in% "all") %>%
+  mutate(items = factor(
+    items,
+    levels = c(
+      "all",
+      "recognized",
+      "unrecognized",
+      "satire",
+      "non-satire",
+      "congruent_truth_party",
+      "incongruent_truth_party",
+      "neutral_truth_party",
+      "congruent_party",
+      "incongruent_party",
+      "neutral_party",
+      "congruent_truth_ideology",
+      "incongruent_truth_ideology",
+      "neutral_truth_ideology",
+      "congruent_ideology",
+      "incongruent_ideology",
+      "neutral_ideology"
+    )
+  ))
+
+# plot d1
+fig_all_participants_d1 <- df_all_participants %>%
+  ggplot(aes(
+    x = items,
+    y = d1_g,
+    ymin = d1_g.lower,
+    ymax = d1_g.upper
+  )) +
+  scale_y_continuous(breaks = pretty_breaks(10)) +
+  coord_fixed(ratio = 2) +
+  ylim(0, max(df_all_participants$Mratio_g.upper)) +
+  geom_pointrange() +
+  labs(x = "", y = "d'") +
+  theme_minimal_hgrid() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+fig_all_participants_d1
+
+# plot meta-d'
+fig_all_participants_meta_d1 <- df_all_participants %>%
+  ggplot(aes(
+    x = items,
+    y = meta_d1_g,
+    ymin = meta_d1_g.lower,
+    ymax = meta_d1_g.upper
+  )) +
+  scale_y_continuous(breaks = pretty_breaks(10)) +
+  coord_fixed(ratio = 2) +
+  ylim(0, max(df_all_participants$Mratio_g.upper)) +
+  geom_pointrange() +
+  labs(x = "", y = "meta-d'") +
+  theme_minimal_hgrid() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+fig_all_participants_meta_d1
+
+# plot Mratio
+fig_all_participants_mratio <- df_all_participants %>%
+  ggplot(aes(
+    x = items,
+    y = Mratio_g,
+    ymin = Mratio_g.lower,
+    ymax = Mratio_g.upper
+  )) +
+  scale_y_continuous(breaks = pretty_breaks(10)) +
+  coord_fixed(ratio = 2) +
+  ylim(0, max(df_all_participants$Mratio_g.upper)) +
+  geom_pointrange() +
+  geom_hline(yintercept = 1, linetype = "dashed") +
+  labs(x = "", y = "Mratio") +
+  theme_minimal_hgrid() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+fig_all_participants_mratio
+
+# plot M-diff
+fig_all_participants_mdiff <- df_all_participants %>%
+  ggplot(aes(
+    x = items,
+    y = Mdiff_g,
+    ymin = Mdiff_g.lower,
+    ymax = Mdiff_g.upper
+  )) +
+  scale_y_continuous(breaks = pretty_breaks(10)) +
+  coord_fixed(ratio = 2) +
+  ylim(min(df_all_participants$Mdiff_g.lower),
+       max(df_all_participants$Mdiff_g.upper)) +
+  geom_pointrange() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "", y = "M-diff") +
+  theme_minimal_hgrid() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+fig_all_participants_mdiff
+
+# merge and save plots
+fig_all_participants_merged <- ggarrange(
+  fig_all_participants_d1,
+  fig_all_participants_meta_d1,
+  fig_all_participants_mratio,
+  ncol = 1,
+  nrow = 3,
+  labels = c("A", "B", "C"),
+  common.legend = TRUE,
+  legend = "right"
+)
+fig_all_participants_merged
+
+save_plot(
+  here("output/figures/fig_all_participants_merged.pdf"),
+  fig_all_participants_merged,
+  base_width = 10,
+  base_height = 20
+)
+
+save_plot(
+  here("output/figures/fig_all_participants_mdiff.pdf"),
+  fig_all_participants_mdiff,
+  base_width = 15,
+  base_height = 3
+)
+
+```
+
+
+
+# Individual-level models
+
+## Mratio
+
+### Participant attrition
+
+```{r individual_m_ratio_participant_attrition}
+df_combined <- bind_rows(
+  metad_indiv_all_participants_m_ratio_cleaned %>% mutate(group = "All participants"),
+  metad_indiv_six_or_more_waves_m_ratio_cleaned %>% mutate(group = "Six or more waves"),
+  metad_indiv_twelve_waves_m_ratio_cleaned %>% mutate(group = "Twelve waves")
+)
+
+fig_robustness_m_ratio_indiv_participant_attrition <-
+  ggplot(df_combined, aes(x = group, y = m_ratio)) +
+  geom_boxplot() +
+  geom_hline(yintercept = 1, linetype = "dashed") +
+  labs(x = "", y = "Mratio") +
+  theme_minimal_hgrid()
+fig_robustness_m_ratio_indiv_participant_attrition
+
+save_plot(
+  here("output/figures/fig_SI_robustness_m_ratio_indiv_participant_attrition.pdf"),
+  fig_robustness_m_ratio_indiv_participant_attrition,
+  base_width = 8,
+  base_height = 6
+)
+
+```
+
+
+
+### Statement characteristics
+
+Write function to compare Mratios for different statement subgroups
+
+```{r function_indiv_m_ratio}
+fnc_scatterplot <-
+  function(df1,
+           df2,
+           x_axis_label = "m_ratio in df1",
+           y_axis_label = "m_ratio in df2") {
+    df_combined <-
+      inner_join(select(df1, id, m_ratio), select(df2, id, m_ratio), by = "id")
+    
+    ggplot(df_combined, aes(x = m_ratio.x, y = m_ratio.y)) +
+      geom_abline(intercept = 0,
+                  slope = 1,
+                  linetype = "dashed")  +
+      stat_smooth(
+        method = "loess",
+        method.args = list(family = "symmetric"),
+        alpha = .15
+      ) +
+      geom_point(alpha = .5) +
+      guides(color = guide_legend(reverse = TRUE),
+             fill = guide_legend(reverse = TRUE)) +
+      labs(x = x_axis_label, y = y_axis_label)
+  }
+
+```
+
+Apply function
+
+```{r}
+# congruent vs. incongruent statements (party*truth)
+fig_robustness_m_ratio_congruent_incongruent <- fnc_scatterplot(
+  metad_indiv_congruent_truth_party_statements_m_ratio_cleaned,
+  metad_indiv_incongruent_truth_party_statements_m_ratio_cleaned,
+  x_axis_label = "Mratio for congruent statements (party*truth)",
+  y_axis_label = "Mratio for incongruent statements (party*truth)"
+)
+fig_robustness_m_ratio_congruent_incongruent
+
+# congruent vs. neutral statements (party*truth)
+fig_robustness_m_ratio_congruent_neutral <- fnc_scatterplot(
+  metad_indiv_congruent_truth_party_statements_m_ratio_cleaned,
+  metad_indiv_neutral_truth_party_statements_m_ratio_cleaned,
+  x_axis_label = "Mratio for congruent statements (party*truth)",
+  y_axis_label = "Mratio for neutral statements (party*truth)"
+)
+fig_robustness_m_ratio_congruent_neutral
+
+# incongruent vs. neutral statements (party*truth)
+fig_robustness_m_ratio_incongruent_neutral <- fnc_scatterplot(
+  metad_indiv_incongruent_truth_party_statements_m_ratio_cleaned,
+  metad_indiv_neutral_truth_party_statements_m_ratio_cleaned,
+  x_axis_label = "Mratio for incongruent statements (party*truth)",
+  y_axis_label = "Mratio for neutral statements (party*truth)"
+)
+fig_robustness_m_ratio_incongruent_neutral
+
+# recognized vs. unrecognized statements
+fig_robustness_m_ratio_recognized_unrecognized <- fnc_scatterplot(
+  metad_indiv_recognized_statements_m_ratio_cleaned,
+  metad_indiv_non_recognized_statements_m_ratio_cleaned,
+  x_axis_label = "Mratio for recognized statements",
+  y_axis_label = "Mratio for unrecognized statements"
+)
+fig_robustness_m_ratio_recognized_unrecognized
+
+# satire vs. non-satire statements
+fig_robustness_m_ratio_satire_non_satire <- fnc_scatterplot(
+  metad_indiv_satire_statements_m_ratio_cleaned,
+  metad_indiv_non_satire_statements_m_ratio_cleaned,
+  x_axis_label = "Mratio for satire statements",
+  y_axis_label = "Mratio for non-satire statements"
+)
+fig_robustness_m_ratio_satire_non_satire
+
+# all plots in one figure
+fig_robustness_m_ratio_indiv_statement_characteristics <- ggarrange(
+  fig_robustness_m_ratio_congruent_incongruent,
+  fig_robustness_m_ratio_congruent_neutral,
+  fig_robustness_m_ratio_incongruent_neutral,
+  fig_robustness_m_ratio_recognized_unrecognized,
+  fig_robustness_m_ratio_satire_non_satire,
+  ncol = 3,
+  nrow = 2,
+  labels = c("A", "B", "C", "D", "E")
+)
+fig_robustness_m_ratio_indiv_statement_characteristics
+
+save_plot(
+  here("output/figures/fig_robustness_m_ratio_indiv_statement_characteristics.pdf"),
+  fig_robustness_m_ratio_indiv_statement_characteristics,
+  base_width = 16,
+  base_height = 12
+)
+
+```
+
+
+
+## Mdiff
+
+### Participant attrition
+
+```{r individual_m_diff_participant_attrition}
+df_combined <- bind_rows(
+  metad_indiv_all_participants_m_diff_cleaned %>% mutate(group = "All participants"),
+  metad_indiv_six_or_more_waves_m_diff_cleaned %>% mutate(group = "Six or more waves"),
+  metad_indiv_twelve_waves_m_diff_cleaned %>% mutate(group = "Twelve waves")
+)
+
+fig_robustness_m_diff_indiv_attrition <-
+  ggplot(df_combined, aes(x = group, y = m_diff)) +
+  geom_boxplot() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "", y = "Mdiff") +
+  theme_minimal_hgrid()
+fig_robustness_m_diff_indiv_attrition
+
+save_plot(
+  here("output/figures/fig_robustness_m_diff_indiv_attrition.pdf"),
+  fig_robustness_m_diff_indiv_attrition,
+  base_width = 8,
+  base_height = 6
+)
+
+```
+
+### Statement characteristics
+
+Write function to compare Mdiffs for different statement subgroups
+
+```{r function_indiv_m_diff}
+fnc_scatterplot <-
+  function(df1,
+           df2,
+           x_axis_label = "m_diff in df1",
+           y_axis_label = "m_diff in df2") {
+    df_combined <-
+      inner_join(select(df1, id, m_diff), select(df2, id, m_diff), by = "id")
+    
+    ggplot(df_combined, aes(x = m_diff.x, y = m_diff.y)) +
+      geom_abline(intercept = 0,
+                  slope = 1,
+                  linetype = "dashed")  +
+      stat_smooth(
+        method = "loess",
+        method.args = list(family = "symmetric"),
+        alpha = .15
+      ) +
+      geom_point(alpha = .5) +
+      guides(color = guide_legend(reverse = TRUE),
+             fill = guide_legend(reverse = TRUE)) +
+      labs(x = x_axis_label, y = y_axis_label)
+  }
+
+```
+
+Apply function
+
+```{r}
+# congruent vs. incongruent statements (party*truth)
+fig_robustness_m_diff_congruent_incongruent <- fnc_scatterplot(
+  metad_indiv_congruent_truth_party_statements_m_diff_cleaned,
+  metad_indiv_incongruent_truth_party_statements_m_diff_cleaned,
+  x_axis_label = "Mdiff for congruent statements (party*truth)",
+  y_axis_label = "Mdiff for incongruent statements (party*truth)"
+)
+fig_robustness_m_diff_congruent_incongruent
+
+# congruent vs. neutral statements (party*truth)
+fig_robustness_m_diff_congruent_neutral <- fnc_scatterplot(
+  metad_indiv_congruent_truth_party_statements_m_diff_cleaned,
+  metad_indiv_neutral_truth_party_statements_m_diff_cleaned,
+  x_axis_label = "Mdiff for congruent statements (party*truth)",
+  y_axis_label = "Mdiff for neutral statements (party*truth)"
+)
+fig_robustness_m_diff_congruent_neutral
+
+# incongruent vs. neutral statements (party*truth)
+fig_robustness_m_diff_incongruent_neutral <- fnc_scatterplot(
+  metad_indiv_incongruent_truth_party_statements_m_diff_cleaned,
+  metad_indiv_neutral_truth_party_statements_m_diff_cleaned,
+  x_axis_label = "Mdiff for incongruent statements (party*truth)",
+  y_axis_label = "Mdiff for neutral statements (party*truth)"
+)
+fig_robustness_m_diff_incongruent_neutral
+
+# recognized vs. unrecognized statements
+fig_robustness_m_diff_recognized_unrecognized <- fnc_scatterplot(
+  metad_indiv_recognized_statements_m_diff_cleaned,
+  metad_indiv_non_recognized_statements_m_diff_cleaned,
+  x_axis_label = "Mdiff for recognized statements",
+  y_axis_label = "Mdiff for unrecognized statements"
+)
+fig_robustness_m_diff_recognized_unrecognized
+
+# satire vs. non-satire statements
+fig_robustness_m_diff_satire_non_satire <- fnc_scatterplot(
+  metad_indiv_satire_statements_m_diff_cleaned,
+  metad_indiv_non_satire_statements_m_diff_cleaned,
+  x_axis_label = "Mdiff for satire statements",
+  y_axis_label = "Mdiff for non-satire statements"
+)
+fig_robustness_m_diff_satire_non_satire
+
+# all plots in one figure
+fig_robustness_m_diff_indiv_statement_characteristics <- ggarrange(
+  fig_robustness_m_diff_congruent_incongruent,
+  fig_robustness_m_diff_congruent_neutral,
+  fig_robustness_m_diff_incongruent_neutral,
+  fig_robustness_m_diff_recognized_unrecognized,
+  fig_robustness_m_diff_satire_non_satire,
+  ncol = 3,
+  nrow = 2,
+  labels = c("A", "B", "C", "D", "E")
+)
+fig_robustness_m_diff_indiv_statement_characteristics
+
+save_plot(
+  here("output/figures/fig_robustness_m_diff_indiv_statement_characteristics.pdf"),
+  fig_robustness_m_diff_indiv_statement_characteristics,
+  base_width = 16,
+  base_height = 12
+)
+
+```

@@ -1,0 +1,122 @@
+---
+title: "Overall insight into the accuracy of one’s truth judgments"
+site: workflowr::wflow_site
+output:
+  workflowr::wflow_html:
+    code_folding: hide
+    number_sections: yes
+    toc: yes
+    toc_depth: 3
+editor_options:
+  chunk_output_type: console
+---
+
+
+
+# Setup
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = TRUE,
+	cache = FALSE
+)
+
+```
+
+
+
+# Source `dependencies.R`
+
+```{r dependencies, message=FALSE, code=readr::read_lines(here::here("code/_dependencies.R"))}
+source(here::here("code/_dependencies.R"))
+
+```
+
+
+
+# Load data
+
+```{r load_data}
+metad_group_all_participants_mcmc <- read_rds(here::here("output/models/group/metad_group_all_participants_mcmc.rds"))
+
+metad_group <- read_rds(here::here("output/models/group/metad_group.rds"))
+
+
+metad_group_all_participants <- metad_group %>% 
+  filter(name == "all participants")
+
+
+```
+
+
+
+# H1.1 / H1.2: Metacognitive ideal hypothesis / Domain comparison hypothesis
+Hypothesis (H1.1): Metacognitive efficiency for political statements is lower than the
+theoretically optimal metacognitive efficiency of Mratio = 1
+(see p.5 of preregistration:
+https://osf.io/veja6/files/osfstorage/614c91e915e9a4005d9239cf).
+
+Hypothesis (H1.2): Metacognitive efficiency for political statements is lower than for
+non-politicized domains such as biology and physics (Mratio = 0.99; Fischer et al.,
+2019) (see p.5 of preregistration:
+https://osf.io/veja6/files/osfstorage/614c91e915e9a4005d9239cf).
+
+```{r overall_insight}
+# compare 95% CI and ROPE (i.e., 0.9 - 1.1)
+mratio <- metad_group_all_participants_mcmc[[1]] %>%
+  filter(Parameter == "mu_logMratio") %>%
+  mutate(exp_value = exp(value))
+
+below_rope <- rope(mratio$exp_value, c(-100 , 0.9), ci = 1)
+below_rope <- below_rope$ROPE_Percentage * 100
+
+within_rope <- rope(mratio$exp_value, c(0.9, 1.1), ci = 1)
+within_rope <- within_rope$ROPE_Percentage * 100
+
+above_rope <- rope(mratio$exp_value, c(1.1, 100), ci = 1)
+above_rope <- above_rope$ROPE_Percentage * 100
+
+# plot trace mcmc
+traceplot(metad_group_all_participants_mcmc[[4]])
+
+# figure posterior distribution of Mratio for all participants
+fig_mcmc <- metad_group_all_participants_mcmc[[1]] %>%
+  filter(Parameter == "mu_logMratio") %>%
+  ggplot(aes(exp(value))) +
+  geom_histogram(
+    binwidth = 0.005,
+    fill = "blue",
+    colour = "grey",
+    alpha = 0.5
+  ) +
+  geom_vline(
+    xintercept = metad_group_all_participants$Mratio_g,
+    linetype = "dashed",
+    size = 1.5
+  ) +
+  geom_segment(aes(
+    x = metad_group_all_participants$Mratio_g.lower,
+    y = 50,
+    xend = metad_group_all_participants$Mratio_g.upper,
+    yend = 50
+  ),
+  colour = "grey",
+  size = 2.5) +
+  ylab("Sample count") +
+  xlab("Mratio") +
+  theme_minimal_hgrid()
+fig_mcmc
+
+save_plot(
+  here("output/figures/fig_mcmc.pdf"),
+  fig_mcmc,
+  base_width = 12,
+  base_height = 6.5
+)
+
+```
+
+The posterior distribution is `r below_rope`% below the low limit of the ROPE,
+`r within_rope`% within the ROPE, and `r above_rope`% above the high limit of the ROPE.

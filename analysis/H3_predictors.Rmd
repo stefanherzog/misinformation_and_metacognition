@@ -1,0 +1,756 @@
+---
+title: "Predictors of metacognitive efficiency"
+site: workflowr::wflow_site
+output:
+  workflowr::wflow_html:
+    code_folding: hide
+    number_sections: yes
+    toc: yes
+    toc_depth: 3
+editor_options:
+  chunk_output_type: console
+---
+
+
+
+# Setup
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = TRUE,
+	cache = FALSE
+)
+
+```
+
+
+
+# Source `dependencies.R`
+
+```{r dependencies, message=FALSE, code=readr::read_lines(here::here("code/_dependencies.R"))}
+source(here::here("code/_dependencies.R"))
+
+```
+
+
+
+# Load data
+
+```{r load_data}
+# load files
+participants <- read_rds(here::here("output/participants.rds"))
+metad_indiv_all_participants_meta_d_cleaned <-
+  read_rds(
+    here::here(
+      "output/models/indiv/metad_cleaned/metad_indiv_all_participants_meta_d_cleaned.rds"
+    )
+  )
+metad_indiv_all_participants_m_ratio_cleaned <-
+  read_rds(
+    here::here(
+      "output/models/indiv/mratio_cleaned/metad_indiv_all_participants_m_ratio_cleaned.rds"
+    )
+  )
+metad_indiv_all_participants_m_diff_cleaned <-
+  read_rds(
+    here::here(
+      "output/models/indiv/mdiff_cleaned/metad_indiv_all_participants_m_diff_cleaned.rds"
+    )
+  )
+
+# merge to `dat`
+dat <- participants %>%
+  left_join(metad_indiv_all_participants_meta_d_cleaned %>%
+              select(id, d1, meta_d),
+            by = "id") %>%
+  left_join(metad_indiv_all_participants_m_ratio_cleaned %>%
+              select(id, m_ratio),
+            by = "id") %>%
+  left_join(metad_indiv_all_participants_m_diff_cleaned %>%
+              select(id, m_diff),
+            by = "id")  
+dat
+
+# write to disk
+write_rds(dat, here("output/dat.rds"), compress = "gz")
+write_csv(dat, here("output/dat.csv"))
+
+```
+
+
+
+# H3.1: Faith in intuition for facts hypothesis
+Hypothesis: The higher citizens’ “Faith in Intuition for Facts”, the lower their
+metacognitive efficiency for political statements
+(see p.8 of preregistration:
+https://osf.io/veja6/files/osfstorage/614c91e915e9a4005d9239cf).
+
+Test: We plot each participant’s point prediction for Mratio (Mdiff)
+against their faith in intuition for facts using robust LOESS smooths and 95%
+confidence bands. Then, we also run a Spearman correlation.
+
+## d'
+
+```{r faith_intuition_d1}
+# plot robust smooth
+fig_faith_intuition_d1 <- dat %>%
+  ggplot(aes(x = faith_intuition,
+             y = d1)) +
+  xlim(1, 5) +
+  xlab("Faith in intuition for facts") +
+  ylab("d'") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  stat_smooth(
+    method = "loess",
+    method.args = list(family = "symmetric"),
+    alpha = .15
+  ) +
+  geom_point(alpha = .5) +
+  guides(color = guide_legend(reverse = TRUE),
+         fill = guide_legend(reverse = TRUE))
+
+fig_faith_intuition_d1 <-
+  ggMarginal(fig_faith_intuition_d1, type = "histogram")
+
+fig_faith_intuition_d1
+
+# compute correlation
+cor.test(dat$faith_intuition, dat$d1, method = c("spearman"))
+
+```
+
+## meta-d'
+
+```{r faith_intution_meta_d}
+fig_faith_intuition_meta_d <- dat %>%
+  ggplot(aes(x = faith_intuition,
+             y = meta_d)) +
+  xlim(1, 5) +
+  xlab("Faith in intuition for facts") +
+  ylab("meta-d'") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  stat_smooth(
+    method = "loess",
+    method.args = list(family = "symmetric"),
+    alpha = .15
+  ) +
+  geom_point(alpha = .5) +
+  guides(color = guide_legend(reverse = TRUE),
+         fill = guide_legend(reverse = TRUE))
+
+fig_faith_intuition_meta_d <-
+  ggMarginal(fig_faith_intuition_meta_d, type = "histogram")
+
+fig_faith_intuition_meta_d
+
+# compute correlation
+cor.test(dat$faith_intuition, dat$meta_d, method = c("spearman"))
+
+```
+
+## Mratio
+
+```{r faith_intuition_mratio}
+# plot robust smooth
+fig_faith_intuition_mratio <- dat %>%
+  ggplot(aes(x = faith_intuition,
+             y = m_ratio)) +
+  xlim(1, 5) +
+  xlab("Faith in intuition for facts") +
+  ylab("Mratio") +
+  geom_hline(yintercept = 1, linetype = "dashed") +
+  stat_smooth(
+    method = "loess",
+    method.args = list(family = "symmetric"),
+    alpha = .15
+  ) +
+  geom_point(alpha = .5) +
+  guides(color = guide_legend(reverse = TRUE),
+         fill = guide_legend(reverse = TRUE))
+
+fig_faith_intuition_mratio <-
+  ggMarginal(fig_faith_intuition_mratio, type = "histogram")
+
+fig_faith_intuition_mratio
+
+# compute correlation
+cor.test(dat$faith_intuition, dat$m_ratio, method = c("spearman"))
+
+```
+
+## Mdiff
+
+```{r faith_intuition_mdiff}
+# plot robust smooth
+fig_faith_intuition_mdiff <- dat %>%
+  ggplot(aes(x = faith_intuition,
+             y = m_diff)) +
+  xlim(1, 5) +
+  xlab("Faith in intuition for facts") +
+  ylab("Mdiff") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  stat_smooth(
+    method = "loess",
+    method.args = list(family = "symmetric"),
+    alpha = .15
+  ) +
+  geom_point(alpha = .5) +
+  guides(color = guide_legend(reverse = TRUE),
+         fill = guide_legend(reverse = TRUE))
+
+fig_faith_intuition_mdiff <-
+  ggMarginal(fig_faith_intuition_mdiff, type = "histogram")
+
+fig_faith_intuition_mdiff
+
+cor.test(dat$faith_intuition, dat$m_diff, method = c("spearman"))
+
+```
+
+
+
+# H3.2: Truth is political hypothesis
+Hypothesis: The higher citizens’ belief that “Truth is Political”, the lower their
+metacognitive efficiency for political statements
+(see p.8 of preregistration:
+https://osf.io/veja6/files/osfstorage/614c91e915e9a4005d9239cf).
+
+Test: We plot each participant’s point prediction for Mratio (Mdiff) against
+their beliefs that truth is political using robust LOESS smooths and 95% confidence
+bands. Then, we also run a Spearman correlation.
+
+
+
+
+
+## d'
+
+```{r truth_political_d1}
+# plot robust smooth
+fig_truth_political_d1 <- dat %>%
+  ggplot(aes(x = truth_political,
+             y = d1)) +
+  xlim(1, 5) +
+  xlab("Truth is political") +
+  ylab("d'") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  stat_smooth(
+    method = "loess",
+    method.args = list(family = "symmetric"),
+    alpha = .15
+  ) +
+  geom_point(alpha = .5) +
+  guides(color = guide_legend(reverse = TRUE),
+         fill = guide_legend(reverse = TRUE))
+
+fig_truth_political_d1 <-
+  ggMarginal(fig_truth_political_d1, type = "histogram")
+
+fig_truth_political_d1
+
+# compute correlation
+cor.test(dat$truth_political, dat$d1, method = c("spearman"))
+
+```
+
+## meta-d'
+
+```{r truth_political_meta_d}
+fig_truth_political_meta_d <- dat %>%
+  ggplot(aes(x = truth_political,
+             y = meta_d)) +
+  xlim(1, 5) +
+  xlab("Truth is political") +
+  ylab("meta-d'") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  stat_smooth(
+    method = "loess",
+    method.args = list(family = "symmetric"),
+    alpha = .15
+  ) +
+  geom_point(alpha = .5) +
+  guides(color = guide_legend(reverse = TRUE),
+         fill = guide_legend(reverse = TRUE))
+
+fig_truth_political_meta_d <-
+  ggMarginal(fig_truth_political_meta_d, type = "histogram")
+
+fig_truth_political_meta_d
+
+# compute correlation
+cor.test(dat$truth_political, dat$meta_d, method = c("spearman"))
+
+```
+
+## Mratio
+
+```{r truth_political_mratio}
+# plot robust smooth
+fig_truth_political_mratio <- dat %>%
+  ggplot(aes(x = truth_political,
+             y = m_ratio)) +
+  xlim(1, 5) +
+  xlab("Truth is political") +
+  ylab("Mratio") +
+  geom_hline(yintercept = 1, linetype = "dashed") +
+  stat_smooth(
+    method = "loess",
+    method.args = list(family = "symmetric"),
+    alpha = .15
+  ) +
+  geom_point(alpha = .5) +
+  guides(color = guide_legend(reverse = TRUE),
+         fill = guide_legend(reverse = TRUE))
+
+fig_truth_political_mratio <-
+  ggMarginal(fig_truth_political_mratio, type = "histogram")
+
+fig_truth_political_mratio
+
+# compute correlation
+cor.test(dat$truth_political, dat$m_ratio, method = c("spearman"))
+
+```
+
+## Mdiff
+
+```{r truth_political_mdiff}
+# plot robust smooth
+fig_truth_political_mdiff <- dat %>%
+  ggplot(aes(x = truth_political,
+             y = m_diff)) +
+  xlim(1, 5) +
+  xlab("Truth is political") +
+  ylab("Mdiff") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  stat_smooth(
+    method = "loess",
+    method.args = list(family = "symmetric"),
+    alpha = .15
+  ) +
+  geom_point(alpha = .5) +
+  guides(color = guide_legend(reverse = TRUE),
+         fill = guide_legend(reverse = TRUE))
+
+fig_truth_political_mdiff <-
+  ggMarginal(fig_truth_political_mdiff, type = "histogram")
+
+fig_truth_political_mdiff
+
+cor.test(dat$truth_political, dat$m_diff, method = c("spearman"))
+
+```
+
+
+
+# H3.3: Need for evidence hypothesis
+Hypothesis: The higher citizens’ “Need for Evidence”, the higher their metacognitive
+efficiency for political statements
+(see p.8 of preregistration:
+https://osf.io/veja6/files/osfstorage/614c91e915e9a4005d9239cf).
+
+Test: We plot each participant’s point prediction for Mratio (Mdiff) against
+their need for evidence using robust LOESS smooths and 95% confidence
+bands. Then, we also run a Spearman correlation.
+
+## d'
+
+```{r need_evidence_d1}
+# plot robust smooth
+fig_need_evidence_d1 <- dat %>%
+  ggplot(aes(x = need_evidence,
+             y = d1)) +
+  xlim(1, 5) +
+  xlab("Need for evidence") +
+  ylab("d'") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  stat_smooth(
+    method = "loess",
+    method.args = list(family = "symmetric"),
+    alpha = .15
+  ) +
+  geom_point(alpha = .5) +
+  guides(color = guide_legend(reverse = TRUE),
+         fill = guide_legend(reverse = TRUE))
+
+fig_need_evidence_d1 <-
+  ggMarginal(fig_need_evidence_d1, type = "histogram")
+
+fig_need_evidence_d1
+
+# compute correlation
+cor.test(dat$need_evidence, dat$d1, method = c("spearman"))
+
+```
+
+## meta-d'
+
+```{r need_evidence_meta_d}
+fig_need_evidence_meta_d <- dat %>%
+  ggplot(aes(x = need_evidence,
+             y = meta_d)) +
+  xlim(1, 5) +
+  xlab("Need for evidence") +
+  ylab("meta-d'") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  stat_smooth(
+    method = "loess",
+    method.args = list(family = "symmetric"),
+    alpha = .15
+  ) +
+  geom_point(alpha = .5) +
+  guides(color = guide_legend(reverse = TRUE),
+         fill = guide_legend(reverse = TRUE))
+
+fig_need_evidence_meta_d <-
+  ggMarginal(fig_need_evidence_meta_d, type = "histogram")
+
+fig_need_evidence_meta_d
+
+# compute correlation
+cor.test(dat$need_evidence, dat$meta_d, method = c("spearman"))
+
+```
+
+## Mratio
+
+```{r need_evidence_mratio}
+# plot robust smooth
+fig_need_evidence_mratio <- dat %>%
+  ggplot(aes(x = need_evidence,
+             y = m_ratio)) +
+  xlim(1, 5) +
+  xlab("Need for evidence") +
+  ylab("Mratio") +
+  geom_hline(yintercept = 1, linetype = "dashed") +
+  stat_smooth(
+    method = "loess",
+    method.args = list(family = "symmetric"),
+    alpha = .15
+  ) +
+  geom_point(alpha = .5) +
+  guides(color = guide_legend(reverse = TRUE),
+         fill = guide_legend(reverse = TRUE))
+
+fig_need_evidence_mratio <-
+  ggMarginal(fig_need_evidence_mratio, type = "histogram")
+
+fig_need_evidence_mratio
+
+# compute correlation
+cor.test(dat$need_evidence, dat$m_ratio, method = c("spearman"))
+
+```
+
+## Mdiff
+
+```{r need_evidence_mdiff}
+# plot robust smooth
+fig_need_evidence_mdiff <- dat %>%
+  ggplot(aes(x = need_evidence,
+             y = m_diff)) +
+  xlim(1, 5) +
+  xlab("Need for evidence") +
+  ylab("Mdiff") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  stat_smooth(
+    method = "loess",
+    method.args = list(family = "symmetric"),
+    alpha = .15
+  ) +
+  geom_point(alpha = .5) +
+  guides(color = guide_legend(reverse = TRUE),
+         fill = guide_legend(reverse = TRUE))
+
+fig_need_evidence_mdiff <-
+  ggMarginal(fig_need_evidence_mdiff, type = "histogram")
+
+fig_need_evidence_mdiff
+
+cor.test(dat$need_evidence, dat$m_ratio, method = c("spearman"))
+
+```
+
+
+
+# H3.4: Age hypothesis
+Hypothesis: Metacognitive efficiency for political statements declines with age
+(see p.8 of preregistration:
+https://osf.io/veja6/files/osfstorage/614c91e915e9a4005d9239cf).
+
+Test: We plot each participant’s point prediction for Mratio (Mdiff) against
+their age using robust LOESS smooths and 95% confidence bands. Then, we also run
+a Spearman correlation.
+
+## d'
+
+```{r age_d1}
+# plot robust smooth
+fig_age_d1 <- dat %>%
+  ggplot(aes(x = age,
+             y = d1)) +
+  xlab("Age") +
+  ylab("d'") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  stat_smooth(
+    method = "loess",
+    method.args = list(family = "symmetric"),
+    alpha = .15
+  ) +
+  geom_point(alpha = .5) +
+  guides(color = guide_legend(reverse = TRUE),
+         fill = guide_legend(reverse = TRUE))
+
+fig_age_d1 <-
+  ggMarginal(fig_age_d1, type = "histogram")
+
+fig_age_d1
+
+# compute correlation
+cor.test(dat$age, dat$d1, method = c("spearman"))
+
+```
+
+## meta-d'
+
+```{r age_meta_d}
+fig_age_meta_d <- dat %>%
+  ggplot(aes(x = age,
+             y = meta_d)) +
+  xlab("Age") +
+  ylab("meta-d'") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  stat_smooth(
+    method = "loess",
+    method.args = list(family = "symmetric"),
+    alpha = .15
+  ) +
+  geom_point(alpha = .5) +
+  guides(color = guide_legend(reverse = TRUE),
+         fill = guide_legend(reverse = TRUE))
+
+fig_age_meta_d <-
+  ggMarginal(fig_age_meta_d, type = "histogram")
+
+fig_age_meta_d
+
+# compute correlation
+cor.test(dat$age, dat$meta_d, method = c("spearman"))
+
+```
+
+## Mratio
+
+```{r age_mratio}
+# plot robust smooth
+fig_age_mratio <- dat %>%
+  ggplot(aes(x = age,
+             y = m_ratio)) +
+  xlab("Age") +
+  ylab("Mratio") +
+  geom_hline(yintercept = 1, linetype = "dashed") +
+  stat_smooth(
+    method = "loess",
+    method.args = list(family = "symmetric"),
+    alpha = .15
+  ) +
+  geom_point(alpha = .5) +
+  guides(color = guide_legend(reverse = TRUE),
+         fill = guide_legend(reverse = TRUE))
+
+fig_age_mratio <- ggMarginal(fig_age_mratio, type = "histogram")
+
+fig_age_mratio
+
+# compute correlation
+cor.test(dat$age, dat$m_ratio, method = c("spearman"))
+
+```
+
+## Mdiff
+
+```{r age_mdiff}
+# plot robust smooth
+fig_age_mdiff <- dat %>%
+  ggplot(aes(x = age,
+             y = m_diff)) +
+  xlab("Age") +
+  ylab("Mdiff") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  stat_smooth(
+    method = "loess",
+    method.args = list(family = "symmetric"),
+    alpha = .15
+  ) +
+  geom_point(alpha = .5) +
+  guides(color = guide_legend(reverse = TRUE),
+         fill = guide_legend(reverse = TRUE))
+
+fig_age_mdiff <- ggMarginal(fig_age_mdiff, type = "histogram")
+
+fig_age_mdiff
+
+cor.test(dat$age, dat$m_diff, method = c("spearman"))
+
+```
+
+# H3.1-3.4: Plot all predictors in one figure
+
+```{r psych_factors_age_merged}
+# Mratio
+fig_epistemic_age_mratio_merged <- ggarrange(
+  fig_faith_intuition_mratio,
+  fig_truth_political_mratio,
+  fig_need_evidence_mratio,
+  fig_age_mratio,
+  ncol = 2,
+  nrow = 2,
+  labels = c("A", "B", "C", "D")
+)
+fig_epistemic_age_mratio_merged
+
+# Mdiff
+fig_epistemic_age_mdiff_merged <- ggarrange(
+  fig_faith_intuition_mdiff,
+  fig_truth_political_mdiff,
+  fig_need_evidence_mdiff,
+  fig_age_mdiff,
+  ncol = 2,
+  nrow = 2,
+  labels = c("A", "B", "C", "D")
+)
+fig_epistemic_age_mdiff_merged
+
+save_plot(
+  here("output/figures/fig_epistemic_age_mdiff_merged.pdf"),
+  fig_epistemic_age_mdiff_merged,
+  base_width = 10,
+  base_height = 10
+)
+
+```
+
+
+
+# Additional: Education
+Hypothesis: Metacognitive efficiency for political statements increases with education.
+
+Test: We plot each participant’s point prediction for Mratio (Mdiff) against
+their age using robust LOESS smooths and 95% confidence bands. Then, we also run
+a Spearman correlation.
+
+## d'
+
+```{r educ_d1}
+# plot robust smooth
+fig_educ_d1 <- dat %>%
+  ggplot(aes(x = educ,
+             y = d1)) +
+  xlab("Education") +
+  ylab("d'") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  stat_smooth(
+    method = "loess",
+    method.args = list(family = "symmetric"),
+    alpha = .15
+  ) +
+  geom_point(alpha = .5) +
+  guides(color = guide_legend(reverse = TRUE),
+         fill = guide_legend(reverse = TRUE))
+
+fig_educ_d1 <-
+  ggMarginal(fig_educ_d1, type = "histogram")
+
+fig_educ_d1
+
+# compute correlation
+cor.test(dat$educ, dat$d1, method = c("spearman"))
+
+```
+
+## meta-d'
+
+```{r educ_meta_d}
+fig_educ_meta_d <- dat %>%
+  ggplot(aes(x = educ,
+             y = meta_d)) +
+  xlab("Education") +
+  ylab("meta-d'") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  stat_smooth(
+    method = "loess",
+    method.args = list(family = "symmetric"),
+    alpha = .15
+  ) +
+  geom_point(alpha = .5) +
+  guides(color = guide_legend(reverse = TRUE),
+         fill = guide_legend(reverse = TRUE))
+
+fig_educ_meta_d <-
+  ggMarginal(fig_educ_meta_d, type = "histogram")
+
+fig_educ_meta_d
+
+# compute correlation
+cor.test(dat$educ, dat$meta_d, method = c("spearman"))
+
+```
+
+## Mratio
+
+```{r educ_mratio}
+# plot robust smooth
+fig_educ_mratio <- dat %>%
+  ggplot(aes(x = educ,
+             y = m_ratio)) +
+  xlab("Education") +
+  ylab("Mratio") +
+  geom_hline(yintercept = 1, linetype = "dashed") +
+  stat_smooth(
+    method = "loess",
+    method.args = list(family = "symmetric"),
+    alpha = .15
+  ) +
+  geom_point(alpha = .5) +
+  guides(color = guide_legend(reverse = TRUE),
+         fill = guide_legend(reverse = TRUE))
+
+fig_educ_mratio <-
+  ggMarginal(fig_educ_mratio, type = "histogram")
+
+fig_educ_mratio
+
+# compute correlation
+cor.test(dat$educ, dat$m_ratio, method = c("spearman"))
+
+```
+
+## Mdiff
+
+```{r educ_mdiff}
+# plot robust smooth
+fig_educ_mdiff <- dat %>%
+  ggplot(aes(x = educ,
+             y = m_diff)) +
+  xlab("Education") +
+  ylab("Mdiff") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  stat_smooth(
+    method = "loess",
+    method.args = list(family = "symmetric"),
+    alpha = .15
+  ) +
+  geom_point(alpha = .5) +
+  guides(color = guide_legend(reverse = TRUE),
+         fill = guide_legend(reverse = TRUE))
+
+fig_educ_mdiff <-
+  ggMarginal(fig_educ_mdiff, type = "histogram")
+
+fig_educ_mdiff
+
+cor.test(dat$educ, dat$m_diff, method = c("spearman"))
+
+```

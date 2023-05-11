@@ -1,0 +1,151 @@
+---
+title: "Basic measures"
+site: workflowr::wflow_site
+output:
+  workflowr::wflow_html:
+    code_folding: hide
+    number_sections: yes
+    toc: yes
+    toc_depth: 3
+editor_options:
+  chunk_output_type: console
+---
+
+
+
+# Setup
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = TRUE,
+	cache = FALSE
+)
+
+```
+
+
+
+# Source `dependencies.R`
+
+```{r dependencies, message=FALSE, code=readr::read_lines(here::here("code/_dependencies.R"))}
+source(here::here("code/_dependencies.R"))
+
+```
+
+
+
+# Load data
+
+```{r load_data}
+participants <- read_rds(here::here("output/participants.rds"))
+statements <- read_rds(here::here("output/statements.rds"))
+task <- read_rds(here::here("output/task.rds"))
+
+```
+
+Prepare data
+
+```{r}
+task <- task %>%
+  mutate(
+    truth_fct = factor(truth, levels = c(1, 0)),
+    dec_fct = factor(dec, levels = c(1, 0)),
+    dec_correct_fct = factor(dec_correct, levels = c(1, 0))
+  )
+
+```
+
+
+
+# Calculate measures
+
+```{r fnc_calc_measures}
+fnc_calc_measures <- function(df) {
+  df %>%
+    summarize(
+      prop_dec_is_1 = detection_prevalence_vec(truth_fct, dec_fct),
+      avg_conf = mean(conf_high),
+      acc = mean(dec_correct),
+      sens_uniprior = mean((sum(dec == 1 &
+                                  truth == 1) + 1) / (sum(truth == 1) + 2)),
+      spec_uniprior = mean((sum(dec == 0 &
+                                  truth == 0) + 1) / (sum(truth == 0) + 2)),
+      sdt_d_prime = qnorm(sens_uniprior) - qnorm(1 - spec_uniprior),
+      sdt_c = -.5 * (qnorm(sens_uniprior) + qnorm(1 - spec_uniprior)),
+      sdt_log_beta = sdt_c * sdt_d_prime,
+      brier = brier_vec(dec_correct, conf_high),
+      DI_prime = DI_prime_vec(truth = dec_correct, estimate = conf_high),
+      conf_auc = roc_auc_vec(dec_correct_fct, conf_high,
+                             options = list(smooth = FALSE))
+    )
+}
+
+```
+
+```{r df_measures}
+df_measures <- task %>%
+  group_by(id) %>%
+  fnc_calc_measures()
+
+# assert data properties
+df_measures %>%
+  assert(within_bounds(0,1), prop_dec_is_1) %>%
+  assert(within_bounds(0,1), avg_conf) %>%
+  assert(within_bounds(0,1), acc) %>%
+  assert(within_bounds(0,1), brier) %>%
+  assert(within_bounds(0,1), conf_auc) %>%
+  assert(not_na, everything(), error_fun = just_warn)
+
+df_measures
+
+```
+
+```{r}
+df_measures <- participants %>%
+  full_join(df_measures, by = "id")
+
+```
+
+
+
+# Scatter plot matrix
+
+```{r plot_measures, fig.height=10, fig.width=10}
+skim(df_measures)
+
+# create scatter plot matrix
+df_measures %>%
+  ggscatmat(
+    columns = match(
+      c(
+        "ideology_index_rounded",
+        "faith_intuition",
+        "need_evidence",
+        "truth_political",
+        "prop_dec_is_1",
+        "acc",
+        "avg_conf",
+        "sdt_d_prime",
+        "sdt_c",
+        "brier",
+        "conf_auc"
+      ),
+      colnames(df_measures)
+    ),
+    alpha = .5,
+    corMethod = "spearman"
+  )
+
+```
+
+
+
+# Write to disk
+
+```{r write_to_disk}
+write_rds(df_measures, here("output/df_measures.rds"), compress = "gz")
+write_csv(df_measures, here("output/df_measures.csv"))
+
+```

@@ -1,0 +1,2105 @@
+---
+title: "Metacognition models"
+site: workflowr::wflow_site
+output:
+  workflowr::wflow_html:
+    code_folding: hide
+    number_sections: yes
+    toc: yes
+    toc_depth: 3
+editor_options:
+  chunk_output_type: console
+---
+
+
+
+# Setup
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = TRUE,
+  cache = FALSE
+)
+
+```
+
+
+
+# Source `dependencies.R`
+
+```{r dependencies, message=FALSE, code=readr::read_lines(here::here("code/_dependencies.R"))}
+source(here::here("code/_dependencies.R"))
+
+```
+
+
+
+# Load data
+
+```{r load_data}
+# load counts
+counts_all_participants <- read_rds(here("output/counts/counts_all_participants.rds"))
+counts_six_or_more_waves <- read_rds(here("output/counts/counts_six_or_more_waves.rds"))
+counts_twelve_waves <- read_rds(here("output/counts/counts_twelve_waves.rds"))
+counts_democrat <- read_rds(here("output/counts/counts_democrat.rds"))
+counts_republican <- read_rds(here("output/counts/counts_republican.rds"))
+counts_liberal_pooled <- read_rds(here("output/counts/counts_liberal_pooled.rds"))
+counts_moderate <- read_rds(here("output/counts/counts_moderate.rds"))
+counts_conservative_pooled <- read_rds(here("output/counts/counts_conservative_pooled.rds"))
+counts_very_liberal <- read_rds(here("output/counts/counts_very_liberal.rds"))
+counts_liberal <- read_rds(here("output/counts/counts_liberal.rds"))
+counts_somewhat_liberal <- read_rds(here("output/counts/counts_somewhat_liberal.rds"))
+counts_somewhat_conservative <- read_rds(here("output/counts/counts_somewhat_conservative.rds"))
+counts_conservative <- read_rds(here("output/counts/counts_conservative.rds"))
+counts_very_conservative <- read_rds(here("output/counts/counts_very_conservative.rds"))
+counts_congruent_party_statements <- read_rds(here("output/counts/counts_congruent_party_statements.rds"))
+counts_incongruent_party_statements <- read_rds(here("output/counts/counts_incongruent_party_statements.rds"))
+counts_neutral_party_statements <- read_rds(here("output/counts/counts_neutral_party_statements.rds"))
+counts_congruent_ideology_statements <- read_rds(here("output/counts/counts_congruent_ideology_statements.rds"))
+counts_incongruent_ideology_statements <- read_rds(here("output/counts/counts_incongruent_ideology_statements.rds"))
+counts_neutral_ideology_statements <- read_rds(here("output/counts/counts_neutral_ideology_statements.rds"))
+counts_congruent_truth_party_statements <- read_rds(here("output/counts/counts_congruent_truth_party_statements.rds"))
+counts_incongruent_truth_party_statements <- read_rds(here("output/counts/counts_incongruent_truth_party_statements.rds"))
+counts_neutral_truth_party_statements <- read_rds(here("output/counts/counts_neutral_truth_party_statements.rds"))
+counts_congruent_truth_ideology_statements <- read_rds(here("output/counts/counts_congruent_truth_ideology_statements.rds"))
+counts_incongruent_truth_ideology_statements <- read_rds(here("output/counts/counts_incongruent_truth_ideology_statements.rds"))
+counts_neutral_truth_ideology_statements <- read_rds(here("output/counts/counts_neutral_truth_ideology_statements.rds"))
+counts_recognized_statements <- read_rds(here("output/counts/counts_recognized_statements.rds"))
+counts_unrecognized_statements <- read_rds(here("output/counts/counts_unrecognized_statements.rds"))
+counts_satire_statements <- read_rds(here("output/counts/counts_satire_statements.rds"))
+counts_non_satire_statements <- read_rds(here("output/counts/counts_non_satire_statements.rds"))
+counts_democrat_congruent_statements <- read_rds(here("output/counts/counts_democrat_congruent_statements.rds"))
+counts_democrat_incongruent_statements <- read_rds(here("output/counts/counts_democrat_incongruent_statements.rds"))
+counts_democrat_neutral_statements <- read_rds(here("output/counts/counts_democrat_neutral_statements.rds"))
+counts_republican_congruent_statements <- read_rds(here("output/counts/counts_republican_congruent_statements.rds"))
+counts_republican_incongruent_statements <- read_rds(here("output/counts/counts_republican_incongruent_statements.rds"))
+counts_republican_neutral_statements <- read_rds(here("output/counts/counts_republican_neutral_statements.rds"))
+counts_liberal_pooled_congruent_statements <- read_rds(here("output/counts/counts_liberal_pooled_congruent_statements.rds"))
+counts_liberal_pooled_incongruent_statements <- read_rds(here("output/counts/counts_liberal_pooled_incongruent_statements.rds"))
+counts_liberal_pooled_neutral_statements <- read_rds(here("output/counts/counts_liberal_pooled_neutral_statements.rds"))
+counts_conservative_pooled_congruent_statements <- read_rds(here("output/counts/counts_conservative_pooled_congruent_statements.rds"))
+counts_conservative_pooled_incongruent_statements <- read_rds(here("output/counts/counts_conservative_pooled_incongruent_statements.rds"))
+counts_conservative_pooled_neutral_statements <- read_rds(here("output/counts/counts_conservative_pooled_neutral_statements.rds"))
+counts_very_liberal_congruent_statements <- read_rds(here("output/counts/counts_very_liberal_congruent_statements.rds"))
+counts_very_liberal_incongruent_statements <- read_rds(here("output/counts/counts_very_liberal_incongruent_statements.rds"))
+counts_very_liberal_neutral_statements <- read_rds(here("output/counts/counts_very_liberal_neutral_statements.rds"))
+counts_liberal_congruent_statements <- read_rds(here("output/counts/counts_liberal_congruent_statements.rds"))
+counts_liberal_incongruent_statements <- read_rds(here("output/counts/counts_liberal_incongruent_statements.rds"))
+counts_liberal_neutral_statements <- read_rds(here("output/counts/counts_liberal_neutral_statements.rds"))
+counts_somewhat_liberal_congruent_statements <- read_rds(here("output/counts/counts_somewhat_liberal_congruent_statements.rds"))
+counts_somewhat_liberal_incongruent_statements <- read_rds(here("output/counts/counts_somewhat_liberal_incongruent_statements.rds"))
+counts_somewhat_liberal_neutral_statements <- read_rds(here("output/counts/counts_somewhat_liberal_neutral_statements.rds"))
+counts_somewhat_conservative_congruent_statements <- read_rds(here("output/counts/counts_somewhat_conservative_congruent_statements.rds"))
+counts_somewhat_conservative_incongruent_statements <- read_rds(here("output/counts/counts_somewhat_conservative_incongruent_statements.rds"))
+counts_somewhat_conservative_neutral_statements <- read_rds(here("output/counts/counts_somewhat_conservative_neutral_statements.rds"))
+counts_conservative_congruent_statements <- read_rds(here("output/counts/counts_conservative_congruent_statements.rds"))
+counts_conservative_incongruent_statements <- read_rds(here("output/counts/counts_conservative_incongruent_statements.rds"))
+counts_conservative_neutral_statements <- read_rds(here("output/counts/counts_conservative_neutral_statements.rds"))
+counts_very_conservative_congruent_statements <- read_rds(here("output/counts/counts_very_conservative_congruent_statements.rds"))
+counts_very_conservative_incongruent_statements <- read_rds(here("output/counts/counts_very_conservative_incongruent_statements.rds"))
+counts_very_conservative_neutral_statements <- read_rds(here("output/counts/counts_very_conservative_neutral_statements.rds"))
+counts_democrat_congruent_truth_statements <- read_rds(here("output/counts/counts_democrat_congruent_truth_statements.rds"))
+counts_democrat_incongruent_truth_statements <- read_rds(here("output/counts/counts_democrat_incongruent_truth_statements.rds"))
+counts_democrat_neutral_truth_statements <- read_rds(here("output/counts/counts_democrat_neutral_truth_statements.rds"))
+counts_republican_congruent_truth_statements <- read_rds(here("output/counts/counts_republican_congruent_truth_statements.rds"))
+counts_republican_incongruent_truth_statements <- read_rds(here("output/counts/counts_republican_incongruent_truth_statements.rds"))
+counts_republican_neutral_truth_statements <- read_rds(here("output/counts/counts_republican_neutral_truth_statements.rds"))
+counts_liberal_pooled_congruent_truth_statements <- read_rds(here("output/counts/counts_liberal_pooled_congruent_truth_statements.rds"))
+counts_liberal_pooled_incongruent_truth_statements <- read_rds(here("output/counts/counts_liberal_pooled_incongruent_truth_statements.rds"))
+counts_liberal_pooled_neutral_truth_statements <- read_rds(here("output/counts/counts_liberal_pooled_neutral_truth_statements.rds"))
+counts_conservative_pooled_congruent_truth_statements <- read_rds(here("output/counts/counts_conservative_pooled_congruent_truth_statements.rds"))
+counts_conservative_pooled_incongruent_truth_statements <- read_rds(here("output/counts/counts_conservative_pooled_incongruent_truth_statements.rds"))
+counts_conservative_pooled_neutral_truth_statements <- read_rds(here("output/counts/counts_conservative_pooled_neutral_truth_statements.rds"))
+counts_very_liberal_congruent_truth_statements <- read_rds(here("output/counts/counts_very_liberal_congruent_truth_statements.rds"))
+counts_very_liberal_incongruent_truth_statements <- read_rds(here("output/counts/counts_very_liberal_incongruent_truth_statements.rds"))
+counts_very_liberal_neutral_truth_statements <- read_rds(here("output/counts/counts_very_liberal_neutral_truth_statements.rds"))
+counts_liberal_congruent_truth_statements <- read_rds(here("output/counts/counts_liberal_congruent_truth_statements.rds"))
+counts_liberal_incongruent_truth_statements <- read_rds(here("output/counts/counts_liberal_incongruent_truth_statements.rds"))
+counts_liberal_neutral_truth_statements <- read_rds(here("output/counts/counts_liberal_neutral_truth_statements.rds"))
+counts_somewhat_liberal_congruent_truth_statements <- read_rds(here("output/counts/counts_somewhat_liberal_congruent_truth_statements.rds"))
+counts_somewhat_liberal_incongruent_truth_statements <- read_rds(here("output/counts/counts_somewhat_liberal_incongruent_truth_statements.rds"))
+counts_somewhat_liberal_neutral_truth_statements <- read_rds(here("output/counts/counts_somewhat_liberal_neutral_truth_statements.rds"))
+counts_somewhat_conservative_congruent_truth_statements <- read_rds(here("output/counts/counts_somewhat_conservative_congruent_truth_statements.rds"))
+counts_somewhat_conservative_incongruent_truth_statements <- read_rds(here("output/counts/counts_somewhat_conservative_incongruent_truth_statements.rds"))
+counts_somewhat_conservative_neutral_truth_statements <- read_rds(here("output/counts/counts_somewhat_conservative_neutral_truth_statements.rds"))
+counts_conservative_congruent_truth_statements <- read_rds(here("output/counts/counts_conservative_congruent_truth_statements.rds"))
+counts_conservative_incongruent_truth_statements <- read_rds(here("output/counts/counts_conservative_incongruent_truth_statements.rds"))
+counts_conservative_neutral_truth_statements <- read_rds(here("output/counts/counts_conservative_neutral_truth_statements.rds"))
+counts_very_conservative_congruent_truth_statements <- read_rds(here("output/counts/counts_very_conservative_congruent_truth_statements.rds"))
+counts_very_conservative_incongruent_truth_statements <- read_rds(here("output/counts/counts_very_conservative_incongruent_truth_statements.rds"))
+counts_very_conservative_neutral_truth_statements <- read_rds(here("output/counts/counts_very_conservative_neutral_truth_statements.rds"))
+
+```
+
+
+
+# Group-level models
+
+## Source and define wrapper functions around `Function_metad_group.R`
+
+```{r source_function_metad_group}
+# source `Function_metad_group.R`
+source(here::here("code/fleming_code/Function_metad_group.R"))
+
+```
+
+
+```{r function_metad_group_mcmc}
+# define wrapper function around `metad_group` for mcmc results
+fnc_metad_group_mcmc <- function(df, str_label, n_adapt = 10000) {
+  # turn the data into the format we see in Fleming's example file
+  df <- df %>%
+    mutate(
+      S1 = map(output, function(x)
+        data.frame(t(x[1][[1]]))),
+      S2 = map(output, function(x)
+        data.frame(t(x[2][[1]])))
+    )
+  
+  nR_S1 <- data.frame(t(bind_rows(df$S1)))
+  nR_S2 <- data.frame(t(bind_rows(df$S2)))
+  
+  output <-
+    metad_group(nR_S1 = list(nR_S1),
+                nR_S2 = list(nR_S2),
+                n_adapt = n_adapt)
+  
+  # Values
+  Value <- summary(output)
+  stat <- data.frame(mean = Value$statistics[, "Mean"])
+  stat %<>%
+    rownames_to_column(var = "name")
+
+  # Rhat
+  Value <- gelman.diag(output, confidence = 0.95)
+  Rhat <- data.frame(conv = Value$psrf)
+
+  # HDI
+  HDI <-
+    data.frame(HPDinterval(runjags::combine.mcmc(output), prob = 0.95)) 
+
+  HDI %<>%
+    rownames_to_column(var = "name")
+
+  # All values in the same dataframe
+  Fit <- stat %>%
+    cbind(lower = HDI$lower,
+          upper = HDI$upper,
+          Rhat = Rhat[, 1])
+  
+  # mcmc values in df for plot posterior distributions
+  mcmc.sample <- ggs(output)
+  
+  # Return results
+  return(list(mcmc.sample, stat, HDI, output))
+}
+
+```
+
+
+```{r function_metad_group_aggregate_results}
+# define wrapper function around `metad_group` for aggregate results
+fnc_metad_group <-
+  function(df,
+           str_label,
+           str_group,
+           str_items,
+           n_adapt = 10000) {
+    # turn the data into the format we see in Fleming's example file
+    df <- df %>%
+      mutate(
+        S1 = map(output, function(x)
+          data.frame(t(x[1][[1]]))),
+        S2 = map(output, function(x)
+          data.frame(t(x[2][[1]])))
+      )
+    
+    nR_S1 <- data.frame(t(bind_rows(df$S1)))
+    nR_S2 <- data.frame(t(bind_rows(df$S2)))
+    
+    output <-
+      metad_group(nR_S1 = list(nR_S1),
+                  nR_S2 = list(nR_S2),
+                  n_adapt = n_adapt)
+    
+    fnc_mcmc_calc <- function(x) {
+      x <- x %>%
+        as_tibble %>%
+        rename(d1_g = mu_d1) %>%
+        mutate(
+          Mratio_g = exp(mu_logMratio),
+          meta_d1_g = Mratio_g * d1_g,
+          Mdiff_g = meta_d1_g - d1_g
+        ) %>%
+        select(-mu_logMratio) %>%
+        as.mcmc
+    }
+    
+    mcmc_chains <- output %>%
+      lapply(fnc_mcmc_calc)
+    
+    all_samples <- combine.mcmc(mcmc_chains) %>%
+      as_tibble
+    
+    stats <- median_qi(all_samples)
+    
+    # Rhat
+    Value <- gelman.diag(output, confidence = 0.95)
+    Rhat <- data.frame(conv = Value$psrf)
+    
+    Rhats <- Rhat %>%
+      as_tibble(rownames = "variable") %>%
+      select(-conv.Upper.C.I.) %>%
+      pivot_wider(
+        names_from = "variable",
+        values_from = conv.Point.est.,
+        names_prefix = "Rhat_"
+      )
+    
+    mcmc_results <- bind_cols(stats, Rhats)
+    
+    # Extract aggregate Mratio results
+    mcmc_results <- mcmc_results %>%
+      mutate(
+        name = str_label,
+        group = str_group,
+        items = str_items,
+        .before = "d1_g"
+      )
+    
+    # Return results
+    return(mcmc_results)
+  }
+
+```
+
+## Run models
+
+```{r group_models}
+# mcmc
+metad_group_all_participants_mcmc <-
+  fnc_metad_group_mcmc(counts_all_participants, "all participants")
+
+# aggregate results
+metad_group_all_participants <-
+  fnc_metad_group(counts_all_participants, "all participants", "all", "all")
+
+metad_group_six_or_more_waves <-
+  fnc_metad_group(counts_six_or_more_waves,
+                  "six or more waves",
+                  "six or more waves",
+                  "all")
+
+metad_group_twelve_waves <-
+  fnc_metad_group(counts_twelve_waves, "twelve waves", "twelve waves", "all")
+
+metad_group_democrat <-
+  fnc_metad_group(counts_democrat, "democrat", "democrat", "all")
+
+metad_group_republican <-
+  fnc_metad_group(counts_republican, "republican", "republican", "all")
+
+metad_group_conservative_pooled <-
+  fnc_metad_group(counts_conservative_pooled,
+                  "conservative pooled",
+                  "conservative pooled",
+                  "all")
+
+metad_group_moderate <-
+  fnc_metad_group(counts_moderate, "moderate", "moderate", "all")
+
+metad_group_liberal_pooled <-
+  fnc_metad_group(counts_liberal_pooled,
+                  "liberal pooled",
+                  "liberal pooled",
+                  "all")
+
+metad_group_very_liberal <-
+  fnc_metad_group(counts_very_liberal, "very liberal", "very liberal", "all")
+
+metad_group_liberal <-
+  fnc_metad_group(counts_liberal, "liberal", "liberal", "all")
+
+metad_group_somewhat_liberal <-
+  fnc_metad_group(counts_somewhat_liberal,
+                  "somewhat liberal",
+                  "somewhat liberal",
+                  "all")
+
+metad_group_somewhat_conservative <-
+  fnc_metad_group(
+    counts_somewhat_conservative,
+    "somewhat conservative",
+    "somewhat conservative",
+    "all"
+  )
+
+metad_group_conservative <-
+  fnc_metad_group(counts_conservative, "conservative", "conservative", "all")
+
+metad_group_very_conservative <-
+  fnc_metad_group(counts_very_conservative,
+                  "very conservative",
+                  "very conservative",
+                  "all")
+
+metad_group_congruent_party_statements <-
+  fnc_metad_group(
+    counts_congruent_party_statements,
+    "congruent statements (party only)",
+    "all",
+    "congruent_party"
+  )
+
+metad_group_incongruent_party_statements <-
+  fnc_metad_group(
+    counts_incongruent_party_statements,
+    "incongruent statements (party only)",
+    "all",
+    "incongruent_party"
+  )
+
+metad_group_neutral_party_statements <-
+  fnc_metad_group(
+    counts_neutral_party_statements,
+    "neutral statements (party only)",
+    "all",
+    "neutral_party"
+  )
+
+metad_group_congruent_ideology_statements <-
+  fnc_metad_group(
+    counts_congruent_ideology_statements,
+    "congruent statements (ideology only)",
+    "all",
+    "congruent_ideology"
+  )
+
+metad_group_incongruent_ideology_statements <-
+  fnc_metad_group(
+    counts_incongruent_ideology_statements,
+    "incongruent statements (ideology only)",
+    "all",
+    "incongruent_ideology"
+  )
+
+metad_group_neutral_ideology_statements <-
+  fnc_metad_group(
+    counts_neutral_ideology_statements,
+    "neutral statements (ideology only)",
+    "all",
+    "neutral_ideology"
+  )
+
+metad_group_congruent_truth_party_statements <-
+  fnc_metad_group(
+    counts_congruent_truth_party_statements,
+    "congruent statements (party*truth)",
+    "all",
+    "congruent_truth_party"
+  )
+
+metad_group_incongruent_truth_party_statements <-
+  fnc_metad_group(
+    counts_incongruent_truth_party_statements,
+    "incongruent statements (party*truth)",
+    "all",
+    "incongruent_truth_party"
+  )
+
+metad_group_neutral_truth_party_statements <-
+  fnc_metad_group(
+    counts_neutral_truth_party_statements,
+    "neutral statements (party*truth)",
+    "all",
+    "neutral_truth_party"
+  )
+
+metad_group_congruent_truth_ideology_statements <-
+  fnc_metad_group(
+    counts_congruent_truth_ideology_statements,
+    "congruent statements (ideology*truth)",
+    "all",
+    "congruent_truth_ideology"
+  )
+
+metad_group_incongruent_truth_ideology_statements <-
+  fnc_metad_group(
+    counts_incongruent_truth_ideology_statements,
+    "incongruent statements (ideology*truth)",
+    "all",
+    "incongruent_truth_ideology"
+  )
+
+metad_group_neutral_truth_ideology_statements <-
+  fnc_metad_group(
+    counts_neutral_truth_ideology_statements,
+    "neutral statements (ideology*truth)",
+    "all",
+    "neutral_truth_ideology"
+  )
+
+metad_group_recognized_statements <-
+  fnc_metad_group(counts_recognized_statements,
+                  "recognized statements",
+                  "all",
+                  "recognized")
+
+metad_group_unrecognized_statements <-
+  fnc_metad_group(counts_unrecognized_statements,
+                  "unrecognized statements",
+                  "all",
+                  "unrecognized")
+
+metad_group_satire_statements <-
+  fnc_metad_group(counts_satire_statements,
+                  "satire statements",
+                  "all",
+                  "satire")
+
+metad_group_non_satire_statements <-
+  fnc_metad_group(counts_non_satire_statements,
+                  "non-satire statements",
+                  "all",
+                  "non-satire")
+
+metad_group_democrat_congruent_statements <-
+  fnc_metad_group(
+    counts_democrat_congruent_statements,
+    "democrat congruent statements (party only)",
+    "democrat",
+    "congruent_party"
+  )
+
+metad_group_democrat_incongruent_statements <-
+  fnc_metad_group(
+    counts_democrat_incongruent_statements,
+    "democrat incongruent statements (party only)",
+    "democrat",
+    "incongruent_party"
+  )
+
+metad_group_democrat_neutral_statements <-
+  fnc_metad_group(
+    counts_democrat_neutral_statements,
+    "democrat neutral statements (party only)",
+    "democrat",
+    "neutral_party"
+  )
+
+metad_group_republican_congruent_statements <-
+  fnc_metad_group(
+    counts_republican_congruent_statements,
+    "republican congruent statements (party only)",
+    "republican",
+    "congruent_party"
+  )
+
+metad_group_republican_incongruent_statements <-
+  fnc_metad_group(
+    counts_republican_incongruent_statements,
+    "republican incongruent statements (party only)",
+    "republican",
+    "incongruent_party"
+  )
+
+metad_group_republican_neutral_statements <-
+  fnc_metad_group(
+    counts_republican_neutral_statements,
+    "republican neutral statements (party only)",
+    "republican",
+    "neutral_party"
+  )
+
+metad_group_liberal_pooled_congruent_statements <-
+  fnc_metad_group(
+    counts_liberal_pooled_congruent_statements,
+    "liberal pooled congruent statements (ideology only)",
+    "liberal pooled",
+    "congruent_ideology"
+  )
+
+metad_group_liberal_pooled_incongruent_statements <-
+  fnc_metad_group(
+    counts_liberal_pooled_incongruent_statements,
+    "liberal pooled incongruent statements (ideology only)",
+    "liberal pooled",
+    "incongruent_ideology"
+  )
+
+metad_group_liberal_pooled_neutral_statements <-
+  fnc_metad_group(
+    counts_liberal_pooled_neutral_statements,
+    "liberal pooled neutral statements (ideology only)",
+    "liberal pooled",
+    "neutral_ideology"
+  )
+
+metad_group_conservative_pooled_congruent_statements <-
+  fnc_metad_group(
+    counts_conservative_pooled_congruent_statements,
+    "conservative pooled congruent statements (ideology only)",
+    "conservative pooled",
+    "congruent_ideology"
+  )
+
+metad_group_conservative_pooled_incongruent_statements <-
+  fnc_metad_group(
+    counts_conservative_pooled_incongruent_statements,
+    "conservative pooled incongruent statements (ideology only)",
+    "conservative pooled",
+    "incongruent_ideology"
+  )
+
+metad_group_conservative_pooled_neutral_statements <-
+  fnc_metad_group(
+    counts_conservative_pooled_neutral_statements,
+    "conservative pooled neutral statements (ideology only)",
+    "conservative pooled",
+    "neutral_ideology"
+  )
+
+metad_group_very_liberal_congruent_statements <-
+  fnc_metad_group(
+    counts_very_liberal_congruent_statements,
+    "very liberal congruent statements (ideology only)",
+    "very liberal",
+    "congruent_ideology"
+  )
+
+metad_group_very_liberal_incongruent_statements <-
+  fnc_metad_group(
+    counts_very_liberal_incongruent_statements,
+    "very liberal incongruent statements (ideology only)",
+    "very liberal",
+    "incongruent_ideology"
+  )
+
+metad_group_very_liberal_neutral_statements <-
+  fnc_metad_group(
+    counts_very_liberal_neutral_statements,
+    "very liberal neutral statements (ideology only)",
+    "very liberal",
+    "neutral_ideology"
+  )
+
+metad_group_liberal_congruent_statements <-
+  fnc_metad_group(
+    counts_liberal_congruent_statements,
+    "liberal congruent statements (ideology only)",
+    "liberal",
+    "congruent_ideology"
+  )
+
+metad_group_liberal_incongruent_statements <-
+  fnc_metad_group(
+    counts_liberal_incongruent_statements,
+    "liberal incongruent statements (ideology only)",
+    "liberal",
+    "incongruent_ideology"
+  )
+
+metad_group_liberal_neutral_statements <-
+  fnc_metad_group(
+    counts_liberal_neutral_statements,
+    "liberal neutral statements (ideology only)",
+    "liberal",
+    "neutral_ideology"
+  )
+
+metad_group_somewhat_liberal_congruent_statements <-
+  fnc_metad_group(
+    counts_somewhat_liberal_congruent_statements,
+    "somewhat liberal congruent statements (ideology only)",
+    "somewhat liberal",
+    "congruent_ideology"
+  )
+
+metad_group_somewhat_liberal_incongruent_statements <-
+  fnc_metad_group(
+    counts_somewhat_liberal_incongruent_statements,
+    "somewhat liberal incongruent statements (ideology only)",
+    "somewhat liberal",
+    "incongruent_ideology"
+  )
+
+metad_group_somewhat_liberal_neutral_statements <-
+  fnc_metad_group(
+    counts_somewhat_liberal_neutral_statements,
+    "somewhat liberal neutral statements (ideology only)",
+    "somewhat liberal",
+    "neutral_ideology"
+  )
+
+metad_group_somewhat_conservative_congruent_statements <-
+  fnc_metad_group(
+    counts_somewhat_conservative_congruent_statements,
+    "somewhat conservative congruent statements (ideology only)",
+    "somewhat conservative",
+    "congruent_ideology"
+  )
+
+metad_group_somewhat_conservative_incongruent_statements <-
+  fnc_metad_group(
+    counts_somewhat_conservative_incongruent_statements,
+    "somewhat conservative incongruent statements (ideology only)",
+    "somewhat conservative",
+    "incongruent_ideology"
+  )
+
+metad_group_somewhat_conservative_neutral_statements <-
+  fnc_metad_group(
+    counts_somewhat_conservative_neutral_statements,
+    "somewhat conservative neutral statements (ideology only)",
+    "somewhat conservative",
+    "neutral_ideology"
+  )
+
+metad_group_conservative_congruent_statements <-
+  fnc_metad_group(
+    counts_conservative_congruent_statements,
+    "conservative congruent statements (ideology only)",
+    "conservative",
+    "congruent_ideology"
+  )
+
+metad_group_conservative_incongruent_statements <-
+  fnc_metad_group(
+    counts_conservative_incongruent_statements,
+    "conservative incongruent statements (ideology only)",
+    "conservative",
+    "incongruent_ideology"
+  )
+
+metad_group_conservative_neutral_statements <-
+  fnc_metad_group(
+    counts_conservative_neutral_statements,
+    "conservative neutral statements (ideology only)",
+    "conservative",
+    "neutral_ideology"
+  )
+
+metad_group_very_conservative_congruent_statements <-
+  fnc_metad_group(
+    counts_very_conservative_congruent_statements,
+    "very conservative congruent statements (ideology only)",
+    "very conservative",
+    "congruent_ideology"
+  )
+
+metad_group_very_conservative_incongruent_statements <-
+  fnc_metad_group(
+    counts_very_conservative_incongruent_statements,
+    "very conservative incongruent statements (ideology only)",
+    "very conservative",
+    "incongruent_ideology"
+  )
+
+metad_group_very_conservative_neutral_statements <-
+  fnc_metad_group(
+    counts_very_conservative_neutral_statements,
+    "very conservative neutral statements (ideology only)",
+    "very conservative",
+    "neutral_ideology"
+  )
+
+metad_group_democrat_congruent_truth_statements <-
+  fnc_metad_group(
+    counts_democrat_congruent_truth_statements,
+    "democrat congruent statements (party*truth)",
+    "democrat",
+    "congruent_truth_party"
+  )
+
+metad_group_democrat_incongruent_truth_statements <-
+  fnc_metad_group(
+    counts_democrat_incongruent_truth_statements,
+    "democrat incongruent statements (party*truth)",
+    "democrat",
+    "incongruent_truth_party"
+  )
+
+metad_group_democrat_neutral_truth_statements <-
+  fnc_metad_group(
+    counts_democrat_neutral_truth_statements,
+    "democrat neutral statements (party*truth)",
+    "democrat",
+    "neutral_truth_party"
+  )
+
+metad_group_republican_congruent_truth_statements <-
+  fnc_metad_group(
+    counts_republican_congruent_truth_statements,
+    "republican congruent statements (party*truth)",
+    "republican",
+    "congruent_truth_party"
+  )
+
+metad_group_republican_incongruent_truth_statements <-
+  fnc_metad_group(
+    counts_republican_incongruent_truth_statements,
+    "republican incongruent statements (party*truth)",
+    "republican",
+    "incongruent_truth_party"
+  )
+
+metad_group_republican_neutral_truth_statements <-
+  fnc_metad_group(
+    counts_republican_neutral_truth_statements,
+    "republican neutral statements (party*truth)",
+    "republican",
+    "neutral_truth_party"
+  )
+
+metad_group_liberal_pooled_congruent_truth_statements <-
+  fnc_metad_group(
+    counts_liberal_pooled_congruent_truth_statements,
+    "liberal pooled congruent statements (ideology*truth)",
+    "liberal pooled",
+    "congruent_truth_ideology"
+  )
+
+metad_group_liberal_pooled_incongruent_truth_statements <-
+  fnc_metad_group(
+    counts_liberal_pooled_incongruent_truth_statements,
+    "liberal pooled incongruent statements (ideology*truth)",
+    "liberal pooled",
+    "incongruent_truth_ideology"
+  )
+
+metad_group_liberal_pooled_neutral_truth_statements <-
+  fnc_metad_group(
+    counts_liberal_pooled_neutral_truth_statements,
+    "liberal pooled neutral statements (ideology*truth)",
+    "liberal pooled",
+    "neutral_truth_ideology"
+  )
+
+metad_group_conservative_pooled_congruent_truth_statements <-
+  fnc_metad_group(
+    counts_conservative_pooled_congruent_truth_statements,
+    "conservative pooled congruent statements (ideology*truth)",
+    "conservative pooled",
+    "congruent_truth_ideology"
+  )
+
+metad_group_conservative_pooled_incongruent_truth_statements <-
+  fnc_metad_group(
+    counts_conservative_pooled_incongruent_truth_statements,
+    "conservative pooled incongruent statements (ideology*truth)",
+    "conservative pooled",
+    "incongruent_truth_ideology"
+    
+  )
+
+metad_group_conservative_pooled_neutral_truth_statements <-
+  fnc_metad_group(
+    counts_conservative_pooled_neutral_truth_statements,
+    "conservative pooled neutral statements (ideology*truth)",
+    "conservative pooled",
+    "neutral_truth_ideology"
+  )
+
+metad_group_very_liberal_congruent_truth_statements <-
+  fnc_metad_group(
+    counts_very_liberal_congruent_truth_statements,
+    "very liberal congruent statements (ideology*truth)",
+    "very liberal",
+    "congruent_truth_ideology"
+  )
+
+metad_group_very_liberal_incongruent_truth_statements <-
+  fnc_metad_group(
+    counts_very_liberal_incongruent_truth_statements,
+    "very liberal incongruent statements (ideology*truth)",
+    "very liberal",
+    "incongruent_truth_ideology"
+  )
+
+metad_group_very_liberal_neutral_truth_statements <-
+  fnc_metad_group(
+    counts_very_liberal_neutral_truth_statements,
+    "very liberal neutral statements (ideology*truth)",
+    "very liberal",
+    "neutral_truth_ideology"
+  )
+
+metad_group_liberal_congruent_truth_statements <-
+  fnc_metad_group(
+    counts_liberal_congruent_truth_statements,
+    "liberal congruent statements (ideology*truth)",
+    "liberal",
+    "congruent_truth_ideology"
+  )
+
+metad_group_liberal_incongruent_truth_statements <-
+  fnc_metad_group(
+    counts_liberal_incongruent_truth_statements,
+    "liberal incongruent statements (ideology*truth)",
+    "liberal",
+    "incongruent_truth_ideology"
+  )
+
+metad_group_liberal_neutral_truth_statements <-
+  fnc_metad_group(
+    counts_liberal_neutral_truth_statements,
+    "liberal neutral statements (ideology*truth)",
+    "liberal",
+    "neutral_truth_ideology"
+  )
+
+metad_group_somewhat_liberal_congruent_truth_statements <-
+  fnc_metad_group(
+    counts_somewhat_liberal_congruent_truth_statements,
+    "somewhat liberal congruent statements (ideology*truth)",
+    "somewhat liberal",
+    "congruent_truth_ideology"
+  )
+
+metad_group_somewhat_liberal_incongruent_truth_statements <-
+  fnc_metad_group(
+    counts_somewhat_liberal_incongruent_truth_statements,
+    "somewhat liberal incongruent statements (ideology*truth)",
+    "somewhat liberal",
+    "incongruent_truth_ideology"
+  )
+
+metad_group_somewhat_liberal_neutral_truth_statements <-
+  fnc_metad_group(
+    counts_somewhat_liberal_neutral_truth_statements,
+    "somewhat liberal neutral statements (ideology*truth)",
+    "somewhat liberal",
+    "neutral_truth_ideology"
+  )
+
+metad_group_somewhat_conservative_congruent_truth_statements <-
+  fnc_metad_group(
+    counts_somewhat_conservative_congruent_truth_statements,
+    "somewhat conservative congruent statements (ideology*truth)",
+    "somewhat conservative",
+    "congruent_truth_ideology"
+  )
+
+metad_group_somewhat_conservative_incongruent_truth_statements <-
+  fnc_metad_group(
+    counts_somewhat_conservative_incongruent_truth_statements,
+    "somewhat conservative incongruent statements (ideology*truth)",
+    "somewhat conservative",
+    "incongruent_truth_ideology"
+  )
+
+metad_group_somewhat_conservative_neutral_truth_statements <-
+  fnc_metad_group(
+    counts_somewhat_conservative_neutral_truth_statements,
+    "somewhat conservative neutral statements (ideology*truth)",
+    "somewhat conservative",
+    "neutral_truth_ideology"
+  )
+
+metad_group_conservative_congruent_truth_statements <-
+  fnc_metad_group(
+    counts_conservative_congruent_truth_statements,
+    "conservative congruent statements (ideology*truth)",
+    "conservative",
+    "congruent_truth_ideology"
+  )
+
+metad_group_conservative_incongruent_truth_statements <-
+  fnc_metad_group(
+    counts_conservative_incongruent_truth_statements,
+    "conservative incongruent statements (ideology*truth)",
+    "conservative",
+    "incongruent_truth_ideology"
+  )
+
+metad_group_conservative_neutral_truth_statements <-
+  fnc_metad_group(
+    counts_conservative_neutral_truth_statements,
+    "conservative neutral statements (ideology*truth)",
+    "conservative",
+    "neutral_truth_ideology"
+  )
+
+metad_group_very_conservative_congruent_truth_statements <-
+  fnc_metad_group(
+    counts_very_conservative_congruent_truth_statements,
+    "very conservative congruent statements (ideology*truth)",
+    "very conservative",
+    "congruent_truth_ideology"
+  )
+
+metad_group_very_conservative_incongruent_truth_statements <-
+  fnc_metad_group(
+    counts_very_conservative_incongruent_truth_statements,
+    "very conservative incongruent statements (ideology*truth)",
+    "very conservative",
+    "incongruent_truth_ideology"
+  )
+
+metad_group_very_conservative_neutral_truth_statements <-
+  fnc_metad_group(
+    counts_very_conservative_neutral_truth_statements,
+    "very conservative neutral statements (ideology*truth)",
+    "very conservative",
+    "neutral_truth_ideology"
+  )
+
+```
+
+## Write to disk
+
+```{r write_to_disk_group_level}
+# mcmc results
+write_rds(
+  metad_group_all_participants_mcmc,
+  here(
+    "output/models/group/metad_group_all_participants_mcmc.rds"
+  ),
+  compress = "gz"
+)
+
+# aggregate results
+metad_group <- list(
+  metad_group_all_participants,
+  metad_group_six_or_more_waves,
+  metad_group_twelve_waves,
+  metad_group_democrat,
+  metad_group_republican,
+  metad_group_conservative_pooled,
+  metad_group_moderate,
+  metad_group_liberal_pooled,
+  metad_group_very_liberal,
+  metad_group_liberal,
+  metad_group_somewhat_liberal,
+  metad_group_somewhat_conservative,
+  metad_group_conservative,
+  metad_group_very_conservative,
+  metad_group_congruent_party_statements,
+  metad_group_incongruent_party_statements,
+  metad_group_neutral_party_statements,
+  metad_group_congruent_ideology_statements,
+  metad_group_incongruent_ideology_statements,
+  metad_group_neutral_ideology_statements,
+  metad_group_congruent_truth_party_statements,
+  metad_group_incongruent_truth_party_statements,
+  metad_group_neutral_truth_party_statements,
+  metad_group_congruent_truth_ideology_statements,
+  metad_group_incongruent_truth_ideology_statements,
+  metad_group_neutral_truth_ideology_statements,
+  metad_group_recognized_statements,
+  metad_group_unrecognized_statements,
+  metad_group_satire_statements,
+  metad_group_non_satire_statements,
+  metad_group_democrat_congruent_statements,
+  metad_group_democrat_incongruent_statements,
+  metad_group_democrat_neutral_statements,
+  metad_group_republican_congruent_statements,
+  metad_group_republican_incongruent_statements,
+  metad_group_republican_neutral_statements,
+  metad_group_liberal_pooled_congruent_statements,
+  metad_group_liberal_pooled_incongruent_statements,
+  metad_group_liberal_pooled_neutral_statements,
+  metad_group_conservative_pooled_congruent_statements,
+  metad_group_conservative_pooled_incongruent_statements,
+  metad_group_conservative_pooled_neutral_statements,
+  metad_group_very_liberal_congruent_statements,
+  metad_group_very_liberal_incongruent_statements,
+  metad_group_very_liberal_neutral_statements,
+  metad_group_liberal_congruent_statements,
+  metad_group_liberal_incongruent_statements,
+  metad_group_liberal_neutral_statements,
+  metad_group_somewhat_liberal_congruent_statements,
+  metad_group_somewhat_liberal_incongruent_statements,
+  metad_group_somewhat_liberal_neutral_statements,
+  metad_group_somewhat_conservative_congruent_statements,
+  metad_group_somewhat_conservative_incongruent_statements,
+  metad_group_somewhat_conservative_neutral_statements,
+  metad_group_conservative_congruent_statements,
+  metad_group_conservative_incongruent_statements,
+  metad_group_conservative_neutral_statements,
+  metad_group_very_conservative_congruent_statements,
+  metad_group_very_conservative_incongruent_statements,
+  metad_group_very_conservative_neutral_statements,
+  metad_group_democrat_congruent_truth_statements,
+  metad_group_democrat_incongruent_truth_statements,
+  metad_group_democrat_neutral_truth_statements,
+  metad_group_republican_congruent_truth_statements,
+  metad_group_republican_incongruent_truth_statements,
+  metad_group_republican_neutral_truth_statements,
+  metad_group_liberal_pooled_congruent_truth_statements,
+  metad_group_liberal_pooled_incongruent_truth_statements,
+  metad_group_liberal_pooled_neutral_truth_statements,
+  metad_group_conservative_pooled_congruent_truth_statements,
+  metad_group_conservative_pooled_incongruent_truth_statements,
+  metad_group_conservative_pooled_neutral_truth_statements,
+  metad_group_very_liberal_congruent_truth_statements,
+  metad_group_very_liberal_incongruent_truth_statements,
+  metad_group_very_liberal_neutral_truth_statements,
+  metad_group_liberal_congruent_truth_statements,
+  metad_group_liberal_incongruent_truth_statements,
+  metad_group_liberal_neutral_truth_statements,
+  metad_group_somewhat_liberal_congruent_truth_statements,
+  metad_group_somewhat_liberal_incongruent_truth_statements,
+  metad_group_somewhat_liberal_neutral_truth_statements,
+  metad_group_somewhat_conservative_congruent_truth_statements,
+  metad_group_somewhat_conservative_incongruent_truth_statements,
+  metad_group_somewhat_conservative_neutral_truth_statements,
+  metad_group_conservative_congruent_truth_statements,
+  metad_group_conservative_incongruent_truth_statements,
+  metad_group_conservative_neutral_truth_statements,
+  metad_group_very_conservative_congruent_truth_statements,
+  metad_group_very_conservative_incongruent_truth_statements,
+  metad_group_very_conservative_neutral_truth_statements
+) %>%
+  bind_rows
+
+metad_group <- metad_group %>% mutate(name = as.factor(name))
+
+write_rds(metad_group,
+          here("output/models/group/metad_group.rds"),
+          compress = "gz")
+write_csv(metad_group, here("output/models/group/metad_group.csv"))
+
+```
+
+
+
+# Individual-level models
+
+## Source and define wrapper function around `Function_metad_indiv.R`
+
+```{r function_metad_indiv}
+source(here::here("code/fleming_code/Function_metad_indiv.R"))
+
+fnc_metad_indiv <- function(df) {
+  # define wrapper function around `metad_indiv`
+  fnc_metad_indiv_fleming <- function(l) {
+    output <- metad_indiv(nR_S1 = l[[1]], nR_S2 = l[[2]])
+    return(output)
+  }
+  
+  # define model
+  model <-
+    df %>% mutate(mcmc = map(.x = output, .f = fnc_metad_indiv_fleming))
+  
+  # function that takes the list object with the three chains
+  # and extracts the posterior information
+  fnc_extract_posterior_infos <- function(chains) {
+    try({
+      # turn mcmc.list into a tidybayes data frame
+      # calculate new variables
+      # only keep relevant variables
+      tbl_mcmc <- chains %>%
+        tidybayes::tidy_draws() %>%
+        dplyr::mutate(m_ratio = meta_d / d1,
+                      m_diff = meta_d - d1) %>%
+        select(.chain, d1, meta_d, m_ratio, m_diff)
+      
+      # turn tbl_mcmc back into an mcmc.list to be able to calculate the rhats
+      list_mcmc <- tbl_mcmc %>%
+        group_by(.chain) %>%
+        nest() %>%
+        mutate(data = map(data, as.matrix)) %>%
+        mutate(data = map(data, as.mcmc)) %>%
+        ungroup() %>%
+        .$data %>%
+        mcmc.list()
+      
+      # calculate the rhats
+      rhats <- mcmcr::rhat(list_mcmc, by = "term") %>%
+        as_tibble() %>%
+        rename(
+          d1.rhat = d1,
+          m_diff.rhat = m_diff,
+          m_ratio.rhat = m_ratio,
+          meta_d.rhat = meta_d
+        )
+      
+      # create output object
+      # by calculating the point estimates and credible intervals
+      # plus the rhats
+      y <- tbl_mcmc %>%
+        ggdist::median_qi() %>%
+        bind_cols(rhats)
+      
+      return(y)
+    })
+  }
+  
+  # using `map` we now create a new variable `posterior_infos` in the `model` df
+  # which, for each participant, contains a one-row data frame with all the
+  # posterior information variables
+  model_infos <- model %>%
+    mutate(posterior_infos = map(.x = mcmc, .f = fnc_extract_posterior_infos))
+  
+  # using `unnest` we add these new variables to the main data frame
+  metad_indiv <- model_infos %>%
+    unnest(posterior_infos) %>%
+    select(-data,-output,-mcmc)
+  
+  # Return results
+  return(metad_indiv)
+  
+}
+
+```
+
+## Run models
+
+```{r indiv_models}
+metad_indiv_all_participants <- fnc_metad_indiv(counts_all_participants)
+metad_indiv_six_or_more_waves <- fnc_metad_indiv(counts_six_or_more_waves)
+metad_indiv_twelve_waves <- fnc_metad_indiv(counts_twelve_waves)
+metad_indiv_congruent_party_statements <- fnc_metad_indiv(counts_congruent_party_statements)
+metad_indiv_incongruent_party_statements <- fnc_metad_indiv(counts_incongruent_party_statements)
+metad_indiv_neutral_party_statements <- fnc_metad_indiv(counts_neutral_party_statements)
+metad_indiv_congruent_ideology_statements <- fnc_metad_indiv(counts_congruent_ideology_statements)
+metad_indiv_incongruent_ideology_statements <- fnc_metad_indiv(counts_incongruent_ideology_statements)
+metad_indiv_neutral_ideology_statements <- fnc_metad_indiv(counts_neutral_ideology_statements)
+metad_indiv_congruent_truth_party_statements <- fnc_metad_indiv(counts_congruent_truth_party_statements)
+metad_indiv_incongruent_truth_party_statements <- fnc_metad_indiv(counts_incongruent_truth_party_statements)
+metad_indiv_neutral_truth_party_statements <- fnc_metad_indiv(counts_neutral_truth_party_statements)
+metad_indiv_congruent_truth_ideology_statements <- fnc_metad_indiv(counts_congruent_truth_ideology_statements)
+metad_indiv_incongruent_truth_ideology_statements <- fnc_metad_indiv(counts_incongruent_truth_ideology_statements)
+metad_indiv_neutral_truth_ideology_statements <- fnc_metad_indiv(counts_neutral_truth_ideology_statements)
+metad_indiv_recognized_statements <- fnc_metad_indiv(counts_recognized_statements)
+metad_indiv_non_recognized_statements <- fnc_metad_indiv(counts_unrecognized_statements)
+metad_indiv_satire_statements <- fnc_metad_indiv(counts_satire_statements)
+metad_indiv_non_satire_statements <- fnc_metad_indiv(counts_non_satire_statements)
+
+```
+
+## Outliers (meta-d')
+
+Exclude meta-d' outliers using the standard box-and-whiskers plot criterion for outliers
+applied across all modelled participants (André, 2022; https://doi.org/10.1037/x).
+
+```{r exclude_outliers}
+# define function for counting outliers
+fnc_outlier_count <- function(df) {
+  output <- df %>%
+    filter(fnc_outlier(meta_d)) %>%
+    nrow()
+  
+  return(output)
+}
+
+# count outliers
+n_outliers_all_participants <-
+  fnc_outlier_count(metad_indiv_all_participants)
+n_outliers_six_or_more_waves <-
+  fnc_outlier_count(metad_indiv_six_or_more_waves)
+n_outliers_twelve_waves <-
+  fnc_outlier_count(metad_indiv_twelve_waves)
+n_outliers_congruent_party_statements <-
+  fnc_outlier_count(metad_indiv_congruent_party_statements)
+n_outliers_incongruent_party_statements <-
+  fnc_outlier_count(metad_indiv_incongruent_party_statements)
+n_outliers_neutral_party_statements <-
+  fnc_outlier_count(metad_indiv_neutral_party_statements)
+n_outliers_congruent_ideology_statements <-
+  fnc_outlier_count(metad_indiv_congruent_ideology_statements)
+n_outliers_incongruent_ideology_statements <-
+  fnc_outlier_count(metad_indiv_incongruent_ideology_statements)
+n_outliers_neutral_ideology_statements <-
+  fnc_outlier_count(metad_indiv_neutral_ideology_statements)
+n_outliers_congruent_truth_party_statements <-
+  fnc_outlier_count(metad_indiv_congruent_truth_party_statements)
+n_outliers_incongruent_truth_party_statements <-
+  fnc_outlier_count(metad_indiv_incongruent_truth_party_statements)
+n_outliers_neutral_truth_party_statements <-
+  fnc_outlier_count(metad_indiv_neutral_truth_party_statements)
+n_outliers_congruent_truth_ideology_statements <-
+  fnc_outlier_count(metad_indiv_congruent_truth_ideology_statements)
+n_outliers_incongruent_truth_ideology_statements <-
+  fnc_outlier_count(metad_indiv_incongruent_truth_ideology_statements)
+n_outliers_neutral_truth_ideology_statements <-
+  fnc_outlier_count(metad_indiv_neutral_truth_ideology_statements)
+n_outliers_recognized_statements <-
+  fnc_outlier_count(metad_indiv_recognized_statements)
+n_outliers_non_recognized_statements <-
+  fnc_outlier_count(metad_indiv_non_recognized_statements)
+n_outliers_satire_statements <-
+  fnc_outlier_count(metad_indiv_satire_statements)
+n_outliers_non_satire_statements <-
+  fnc_outlier_count(metad_indiv_non_satire_statements)
+
+# define function for excluding outliers
+fnc_outlier_exclusion <- function(df) {
+  output <- df %>%
+    filter(fnc_outlier(meta_d)) %>%
+    select(id) %>%
+    anti_join(df, ., by = "id")
+  return(output)
+}
+
+# exclude outliers
+metad_indiv_all_participants <-
+  fnc_outlier_exclusion(metad_indiv_all_participants)
+metad_indiv_six_or_more_waves <-
+  fnc_outlier_exclusion(metad_indiv_six_or_more_waves)
+metad_indiv_twelve_waves <-
+  fnc_outlier_exclusion(metad_indiv_twelve_waves)
+metad_indiv_congruent_party_statements <-
+  fnc_outlier_exclusion(metad_indiv_congruent_party_statements)
+metad_indiv_incongruent_party_statements <-
+  fnc_outlier_exclusion(metad_indiv_incongruent_party_statements)
+metad_indiv_neutral_party_statements <-
+  fnc_outlier_exclusion(metad_indiv_neutral_party_statements)
+metad_indiv_congruent_ideology_statements <-
+  fnc_outlier_exclusion(metad_indiv_congruent_ideology_statements)
+metad_indiv_incongruent_ideology_statements <-
+  fnc_outlier_exclusion(metad_indiv_incongruent_ideology_statements)
+metad_indiv_neutral_ideology_statements <-
+  fnc_outlier_exclusion(metad_indiv_neutral_ideology_statements)
+metad_indiv_congruent_truth_party_statements <-
+  fnc_outlier_exclusion(metad_indiv_congruent_truth_party_statements)
+metad_indiv_incongruent_truth_party_statements <-
+  fnc_outlier_exclusion(metad_indiv_incongruent_truth_party_statements)
+metad_indiv_neutral_truth_party_statements <-
+  fnc_outlier_exclusion(metad_indiv_neutral_truth_party_statements)
+metad_indiv_congruent_truth_ideology_statements <-
+  fnc_outlier_exclusion(metad_indiv_congruent_truth_ideology_statements)
+metad_indiv_incongruent_truth_ideology_statements <-
+  fnc_outlier_exclusion(metad_indiv_incongruent_truth_ideology_statements)
+metad_indiv_neutral_truth_ideology_statements <-
+  fnc_outlier_exclusion(metad_indiv_neutral_truth_ideology_statements)
+metad_indiv_recognized_statements <-
+  fnc_outlier_exclusion(metad_indiv_recognized_statements)
+metad_indiv_non_recognized_statements <-
+  fnc_outlier_exclusion(metad_indiv_non_recognized_statements)
+metad_indiv_satire_statements <-
+  fnc_outlier_exclusion(metad_indiv_satire_statements)
+metad_indiv_non_satire_statements <-
+  fnc_outlier_exclusion(metad_indiv_non_satire_statements)
+
+# create df for meta-d' values (as the other df's will be further manipulated below)
+metad_indiv_all_participants_meta_d_cleaned <-
+  metad_indiv_all_participants
+
+```
+
+Based on our criterion for detecting outliers, we exclude the following numbers
+of participants' individual-level point estimates for meta-d' across different models:
+* All participants: `r n_outliers_all_participants` participants
+* Six or more waves: `r n_outliers_six_or_more_waves` participants
+* Twelve waves: `r n_outliers_twelve_waves` participants
+* Congruent statements (party only): `r n_outliers_congruent_party_statements` participants
+* Incongruent statements (party only): `r n_outliers_incongruent_party_statements` participants
+* Neutral statements (party only): `r n_outliers_neutral_party_statements` participants
+* Congruent statements (ideology only): `r n_outliers_congruent_ideology_statements` participants
+* Incongruent statements (ideology only): `r n_outliers_incongruent_ideology_statements` participants
+* Neutral statements (ideology only): `r n_outliers_neutral_ideology_statements` participants
+* Congruent statements (party*truth): `r n_outliers_congruent_truth_party_statements` participants
+* Incongruent statements (party*truth): `r n_outliers_incongruent_truth_party_statements` participants
+* Neutral statements (party*truth): `r n_outliers_neutral_truth_party_statements` participants
+* Congruent statements (ideology*truth): `r n_outliers_congruent_truth_ideology_statements` participants
+* Incongruent statements (ideology*truth): `r n_outliers_incongruent_truth_ideology_statements` participants
+* Neutral statements (ideology*truth): `r n_outliers_neutral_truth_ideology_statements` participants
+* Recognized statements: `r n_outliers_recognized_statements` participants
+* Non-recognized statements: `r n_outliers_non_recognized_statements` participants
+* Satire statements: `r n_outliers_satire_statements` participants
+* Non-satire statements: `r n_outliers_non_satire_statements` participants
+
+## Uninterpretable values (Mratio and Mdiff)
+
+Identify and exclude uninterpretable Mratio (<= O or NA) and Mdiff (NA) values
+across different models. If more than 10% of the resulting Mratio values are
+uninterpretable in any of the used models, including the robustness checks, Mdiff
+will be used instead (for all participants and for all individual-level analyses).
+
+```{r exclude_uninterpretable_values}
+# define function for calculating percentage of uninterpretable values and excluding them
+fnc_unint <- function(df) {
+  df <- df %>%
+    mutate(m_ratio_unint =  m_ratio <= 0 | is.na(m_ratio),
+           m_diff_unint = is.na(m_diff))
+  
+  output <- list(
+    n_m_ratio_unint = sum(df$m_ratio_unint == 1),
+    perc_m_ratio_unint = mean(df$m_ratio_unint == 1),
+    dat_m_ratio_filtered = filter(df, m_ratio_unint == 0),
+    n_m_diff_unint = sum(df$m_diff_unint == 1),
+    perc_m_diff_unint = mean(df$m_diff_unint == 1),
+    dat_m_diff_filtered = filter(df, m_diff_unint == 0)
+  )
+  
+  return(output)
+}
+
+# calculate the number and percentages of uninterpretable values and exclude them
+metad_indiv_all_participants <-
+  fnc_unint(metad_indiv_all_participants)
+metad_indiv_six_or_more_waves <-
+  fnc_unint(metad_indiv_six_or_more_waves)
+metad_indiv_twelve_waves <- fnc_unint(metad_indiv_twelve_waves)
+metad_indiv_congruent_party_statements <-
+  fnc_unint(metad_indiv_congruent_party_statements)
+metad_indiv_incongruent_party_statements <-
+  fnc_unint(metad_indiv_incongruent_party_statements)
+metad_indiv_neutral_party_statements <-
+  fnc_unint(metad_indiv_neutral_party_statements)
+metad_indiv_congruent_ideology_statements <-
+  fnc_unint(metad_indiv_congruent_ideology_statements)
+metad_indiv_incongruent_ideology_statements <-
+  fnc_unint(metad_indiv_incongruent_ideology_statements)
+metad_indiv_neutral_ideology_statements <-
+  fnc_unint(metad_indiv_neutral_ideology_statements)
+metad_indiv_congruent_truth_party_statements <-
+  fnc_unint(metad_indiv_congruent_truth_party_statements)
+metad_indiv_incongruent_truth_party_statements <-
+  fnc_unint(metad_indiv_incongruent_truth_party_statements)
+metad_indiv_neutral_truth_party_statements <-
+  fnc_unint(metad_indiv_neutral_truth_party_statements)
+metad_indiv_congruent_truth_ideology_statements <-
+  fnc_unint(metad_indiv_congruent_truth_ideology_statements)
+metad_indiv_incongruent_truth_ideology_statements <-
+  fnc_unint(metad_indiv_incongruent_truth_ideology_statements)
+metad_indiv_neutral_truth_ideology_statements <-
+  fnc_unint(metad_indiv_neutral_truth_ideology_statements)
+metad_indiv_recognized_statements <-
+  fnc_unint(metad_indiv_recognized_statements)
+metad_indiv_non_recognized_statements <-
+  fnc_unint(metad_indiv_non_recognized_statements)
+metad_indiv_satire_statements <-
+  fnc_unint(metad_indiv_satire_statements)
+metad_indiv_non_satire_statements <-
+  fnc_unint(metad_indiv_non_satire_statements)
+
+# summarize the number and percentages of uninterpretable values across models
+unint <-
+  tibble(
+    metad_indiv_all_participants = c(
+      metad_indiv_all_participants[[1]],
+      metad_indiv_all_participants[[2]] * 100,
+      metad_indiv_all_participants[[4]],
+      metad_indiv_all_participants[[5]] * 100
+    ),
+    metad_indiv_six_or_more_waves = c(
+      metad_indiv_six_or_more_waves[[1]],
+      metad_indiv_six_or_more_waves[[2]] * 100,
+      metad_indiv_six_or_more_waves[[4]],
+      metad_indiv_six_or_more_waves[[5]] * 100
+    ),
+    metad_indiv_twelve_waves = c(
+      metad_indiv_twelve_waves[[1]],
+      metad_indiv_twelve_waves[[2]] * 100,
+      metad_indiv_twelve_waves[[4]],
+      metad_indiv_twelve_waves[[5]] * 100
+    ),
+    metad_indiv_congruent_party_statements = c(
+      metad_indiv_congruent_party_statements[[1]],
+      metad_indiv_congruent_party_statements[[2]] * 100,
+      metad_indiv_congruent_party_statements[[4]],
+      metad_indiv_congruent_party_statements[[5]] * 100
+    ),
+    metad_indiv_incongruent_party_statements = c(
+      metad_indiv_incongruent_party_statements[[1]],
+      metad_indiv_incongruent_party_statements[[2]] * 100,
+      metad_indiv_incongruent_party_statements[[4]],
+      metad_indiv_incongruent_party_statements[[5]] * 100
+    ),
+    metad_indiv_neutral_party_statements = c(
+      metad_indiv_neutral_party_statements[[1]],
+      metad_indiv_neutral_party_statements[[2]] * 100,
+      metad_indiv_neutral_party_statements[[4]],
+      metad_indiv_neutral_party_statements[[5]] * 100
+    ),
+    metad_indiv_congruent_ideology_statements = c(
+      metad_indiv_congruent_ideology_statements[[1]],
+      metad_indiv_congruent_ideology_statements[[2]] * 100,
+      metad_indiv_congruent_ideology_statements[[4]],
+      metad_indiv_congruent_ideology_statements[[5]] * 100
+    ),
+    metad_indiv_incongruent_ideology_statements = c(
+      metad_indiv_incongruent_ideology_statements[[1]],
+      metad_indiv_incongruent_ideology_statements[[2]] * 100,
+      metad_indiv_incongruent_ideology_statements[[4]],
+      metad_indiv_incongruent_ideology_statements[[5]] * 100
+    ),
+    metad_indiv_neutral_ideology_statements = c(
+      metad_indiv_neutral_ideology_statements[[1]],
+      metad_indiv_neutral_ideology_statements[[2]] * 100,
+      metad_indiv_neutral_ideology_statements[[4]],
+      metad_indiv_neutral_ideology_statements[[5]] * 100
+    ),
+    metad_indiv_congruent_truth_party_statements = c(
+      metad_indiv_congruent_truth_party_statements[[1]],
+      metad_indiv_congruent_truth_party_statements[[2]] * 100,
+      metad_indiv_congruent_truth_party_statements[[4]],
+      metad_indiv_congruent_truth_party_statements[[5]] * 100
+    ),
+    metad_indiv_incongruent_truth_party_statements = c(
+      metad_indiv_incongruent_truth_party_statements[[1]],
+      metad_indiv_incongruent_truth_party_statements[[2]] * 100,
+      metad_indiv_incongruent_truth_party_statements[[4]],
+      metad_indiv_incongruent_truth_party_statements[[5]] * 100
+    ),
+    metad_indiv_neutral_truth_party_statements = c(
+      metad_indiv_neutral_truth_party_statements[[1]],
+      metad_indiv_neutral_truth_party_statements[[2]] * 100,
+      metad_indiv_neutral_truth_party_statements[[4]],
+      metad_indiv_neutral_truth_party_statements[[5]] * 100
+    ),
+    metad_indiv_congruent_truth_ideology_statements = c(
+      metad_indiv_congruent_truth_ideology_statements[[1]],
+      metad_indiv_congruent_truth_ideology_statements[[2]] * 100,
+      metad_indiv_congruent_truth_ideology_statements[[4]],
+      metad_indiv_congruent_truth_ideology_statements[[5]] * 100
+    ),
+    metad_indiv_incongruent_truth_ideology_statements = c(
+      metad_indiv_incongruent_truth_ideology_statements[[1]],
+      metad_indiv_incongruent_truth_ideology_statements[[2]] * 100,
+      metad_indiv_incongruent_truth_ideology_statements[[4]],
+      metad_indiv_incongruent_truth_ideology_statements[[5]] * 100
+    ),
+    metad_indiv_neutral_truth_ideology_statements = c(
+      metad_indiv_neutral_truth_ideology_statements[[1]],
+      metad_indiv_neutral_truth_ideology_statements[[2]] * 100,
+      metad_indiv_neutral_truth_ideology_statements[[4]],
+      metad_indiv_neutral_truth_ideology_statements[[5]] * 100
+    ),
+    metad_indiv_recognized_statements = c(
+      metad_indiv_recognized_statements[[1]],
+      metad_indiv_recognized_statements[[2]] * 100,
+      metad_indiv_recognized_statements[[4]],
+      metad_indiv_recognized_statements[[5]] * 100
+    ),
+    metad_indiv_non_recognized_statements = c(
+      metad_indiv_non_recognized_statements[[1]],
+      metad_indiv_non_recognized_statements[[2]] * 100,
+      metad_indiv_non_recognized_statements[[4]],
+      metad_indiv_non_recognized_statements[[5]] * 100
+    ),
+    metad_indiv_satire_statements = c(
+      metad_indiv_satire_statements[[1]],
+      metad_indiv_satire_statements[[2]] * 100,
+      metad_indiv_satire_statements[[4]],
+      metad_indiv_satire_statements[[5]] * 100
+    ),
+    metad_indiv_non_satire_statements = c(
+      metad_indiv_non_satire_statements[[1]],
+      metad_indiv_non_satire_statements[[2]] * 100,
+      metad_indiv_non_satire_statements[[4]],
+      metad_indiv_non_satire_statements[[5]] * 100
+    )
+  ) %>%
+  t() %>%
+  as.data.frame() %>%
+  rownames_to_column(var = "name")
+
+colnames(unint) <-
+  c(
+    "name",
+    "n_m_ratio_unint",
+    "perc_m_ratio_unint",
+    "n_m_diff_unint",
+    "perc_m_diff_unint"
+  )
+
+unint
+
+```
+
+We exclude the following numbers of participants' individual-level point estimates
+for Mratio across different models:
+* All participants: `r unint$n_m_ratio_unint[[1]]` participants
+* Six or more waves: `r unint$n_m_ratio_unint[[2]]` participants
+* Twelve waves: `r unint$n_m_ratio_unint[[3]]` participants
+* Congruent statements (party only): `r unint$n_m_ratio_unint[[4]]` participants
+* Incongruent statements (party only): `r unint$n_m_ratio_unint[[5]]` participants
+* Neutral statements (party only): `r unint$n_m_ratio_unint[[6]]` participants
+* Congruent statements (ideology only): `r unint$n_m_ratio_unint[[7]]` participants
+* Incongruent statements (ideology only): `r unint$n_m_ratio_unint[[8]]` participants
+* Neutral statements (ideology only): `r unint$n_m_ratio_unint[[9]]` participants
+* Congruent statements (party*truth): `r unint$n_m_ratio_unint[[10]]` participants
+* Incongruent statements (party*truth): `r unint$n_m_ratio_unint[[11]]` participants
+* Neutral statements (party*truth): `r unint$n_m_ratio_unint[[12]]` participants
+* Congruent statements (ideology*truth): `r unint$n_m_ratio_unint[[13]]` participants
+* Incongruent statements (ideology*truth): `r unint$n_m_ratio_unint[[14]]` participants
+* Neutral statements (ideology*truth): `r unint$n_m_ratio_unint[[15]]` participants
+* Recognized statements: `r unint$n_m_ratio_unint[[16]]` participants
+* Non-recognized statements: `r unint$n_m_ratio_unint[[17]]` participants
+* Satire statements: `r unint$n_m_ratio_unint[[18]]` participants
+* Non-satire statements: `r unint$n_m_ratio_unint[[19]]` participants
+
+We exclude the following numbers of participants' individual-level point estimates
+for Mdiff across different models:
+* All participants: `r unint$n_m_diff_unint[[1]]` participants
+* Six or more waves: `r unint$n_m_diff_unint[[2]]` participants
+* Twelve waves: `r unint$n_m_diff_unint[[3]]` participants
+* Congruent statements (party only): `r unint$n_m_diff_unint[[4]]` participants
+* Incongruent statements (party only): `r unint$n_m_diff_unint[[5]]` participants
+* Neutral statements (party only): `r unint$n_m_diff_unint[[6]]` participants
+* Congruent statements (ideology only): `r unint$n_m_diff_unint[[7]]` participants
+* Incongruent statements (ideology only): `r unint$n_m_diff_unint[[8]]` participants
+* Neutral statements (ideology only): `r unint$n_m_diff_unint[[9]]` participants
+* Congruent statements (party*truth): `r unint$n_m_diff_unint[[10]]` participants
+* Incongruent statements (party*truth): `r unint$n_m_diff_unint[[11]]` participants
+* Neutral statements (party*truth): `r unint$n_m_diff_unint[[12]]` participants
+* Congruent statements (ideology*truth): `r unint$n_m_diff_unint[[13]]` participants
+* Incongruent statements (ideology*truth): `r unint$n_m_diff_unint[[14]]` participants
+* Neutral statements (ideology*truth): `r unint$n_m_diff_unint[[15]]` participants
+* Recognized statements: `r unint$n_m_diff_unint[[16]]` participants
+* Non-recognized statements: `r unint$n_m_diff_unint[[17]]` participants
+* Satire statements: `r unint$n_m_diff_unint[[18]]` participants
+* Non-satire statements: `r unint$n_m_diff_unint[[19]]` participants
+
+## Write to disk
+
+```{r write_to_disk_individual_level}
+# meta-d' cleaned
+write_rds(
+  metad_indiv_all_participants_meta_d_cleaned,
+  here(
+    "output/models/indiv/metad_cleaned/metad_indiv_all_participants_meta_d_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_all_participants_meta_d_cleaned,
+  here(
+    "output/models/indiv/metad_cleaned/metad_indiv_all_participants_meta_d_cleaned.csv"
+  )
+)
+
+
+# Mratio cleaned
+write_rds(
+  metad_indiv_all_participants[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_all_participants_m_ratio_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_all_participants[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_all_participants_m_ratio_cleaned.csv"
+  )
+)
+
+write_rds(
+  metad_indiv_six_or_more_waves[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_six_or_more_waves_m_ratio_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_six_or_more_waves[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_six_or_more_waves_m_ratio_cleaned.csv"
+  )
+)
+
+write_rds(
+  metad_indiv_twelve_waves[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_twelve_waves_m_ratio_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_twelve_waves[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_twelve_waves_m_ratio_cleaned.csv"
+  )
+)
+
+write_rds(
+  metad_indiv_congruent_party_statements[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_congruent_party_statements_m_ratio_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_congruent_party_statements[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_congruent_party_statements_m_ratio_cleaned.csv"
+  )
+)
+
+write_rds(
+  metad_indiv_incongruent_party_statements[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_incongruent_party_statements_m_ratio_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_incongruent_party_statements[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_incongruent_party_statements_m_ratio_cleaned.csv"
+  )
+)
+
+write_rds(
+  metad_indiv_neutral_party_statements[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_neutral_party_statements_m_ratio_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_neutral_party_statements[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_neutral_party_statements_m_ratio_cleaned.csv"
+  )
+)
+
+write_rds(
+  metad_indiv_congruent_ideology_statements[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_congruent_ideology_statements_m_ratio_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_congruent_ideology_statements[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_congruent_ideology_statements_m_ratio_cleaned.csv"
+  )
+)
+
+write_rds(
+  metad_indiv_incongruent_ideology_statements[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_incongruent_ideology_statements_m_ratio_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_incongruent_ideology_statements[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_incongruent_ideology_statements_m_ratio_cleaned.csv"
+  )
+)
+
+write_rds(
+  metad_indiv_neutral_ideology_statements[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_neutral_ideology_statements_m_ratio_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_neutral_ideology_statements[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_neutral_ideology_statements_m_ratio_cleaned.csv"
+  )
+)
+
+write_rds(
+  metad_indiv_congruent_truth_party_statements[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_congruent_truth_party_statements_m_ratio_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_congruent_truth_party_statements[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_congruent_truth_party_statements_m_ratio_cleaned.csv"
+  )
+)
+
+write_rds(
+  metad_indiv_incongruent_truth_party_statements[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_incongruent_truth_party_statements_m_ratio_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_incongruent_truth_party_statements[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_incongruent_truth_party_statements_m_ratio_cleaned.csv"
+  )
+)
+
+write_rds(
+  metad_indiv_neutral_truth_party_statements[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_neutral_truth_party_statements_m_ratio_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_neutral_truth_party_statements[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_neutral_truth_party_statements_m_ratio_cleaned.csv"
+  )
+)
+
+write_rds(
+  metad_indiv_congruent_truth_ideology_statements[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_congruent_truth_ideology_statements_m_ratio_cleaned.rds"
+  ),
+  compress = "gz"
+)
+
+write_csv(
+  metad_indiv_congruent_truth_ideology_statements[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_congruent_truth_ideology_statements_m_ratio_cleaned.csv"
+  )
+)
+
+write_rds(
+  metad_indiv_incongruent_truth_ideology_statements[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_incongruent_truth_ideology_statements_m_ratio_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_incongruent_truth_ideology_statements[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_incongruent_truth_ideology_statements_m_ratio_cleaned.csv"
+  )
+)
+
+write_rds(
+  metad_indiv_neutral_truth_ideology_statements[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_neutral_truth_ideology_statements_m_ratio_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_neutral_truth_ideology_statements[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_neutral_truth_ideology_statements_m_ratio_cleaned.csv"
+  )
+)
+
+write_rds(
+  metad_indiv_recognized_statements[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_recognized_statements_m_ratio_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_recognized_statements[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_recognized_statements_m_ratio_cleaned.csv"
+  )
+)
+
+write_rds(
+  metad_indiv_non_recognized_statements[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_non_recognized_statements_m_ratio_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_non_recognized_statements[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_non_recognized_statements_m_ratio_cleaned.csv"
+  )
+)
+
+write_rds(
+  metad_indiv_satire_statements[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_satire_statements_m_ratio_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_satire_statements[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_satire_statements_m_ratio_cleaned.csv"
+  )
+)
+
+write_rds(
+  metad_indiv_non_satire_statements[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_non_satire_statements_m_ratio_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_non_satire_statements[[3]],
+  here(
+    "output/models/indiv/mratio_cleaned/metad_indiv_non_satire_statements_m_ratio_cleaned.csv"
+  )
+)
+
+
+# Mdiff cleaned
+write_rds(
+  metad_indiv_all_participants[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_all_participants_m_diff_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_all_participants[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_all_participants_m_diff_cleaned.csv"
+  )
+)
+
+write_rds(
+  metad_indiv_six_or_more_waves[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_six_or_more_waves_m_diff_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_six_or_more_waves[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_six_or_more_waves_m_diff_cleaned.csv"
+  )
+)
+
+write_rds(
+  metad_indiv_twelve_waves[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_twelve_waves_m_diff_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_twelve_waves[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_twelve_waves_m_diff_cleaned.csv"
+  )
+)
+
+write_rds(
+  metad_indiv_congruent_party_statements[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_congruent_party_statements_m_diff_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_congruent_party_statements[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_congruent_party_statements_m_diff_cleaned.csv"
+  )
+)
+
+write_rds(
+  metad_indiv_incongruent_party_statements[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_incongruent_party_statements_m_diff_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_incongruent_party_statements[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_incongruent_party_statements_m_diff_cleaned.csv"
+  )
+)
+
+write_rds(
+  metad_indiv_neutral_party_statements[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_neutral_party_statements_m_diff_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_neutral_party_statements[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_neutral_party_statements_m_diff_cleaned.csv"
+  )
+)
+
+write_rds(
+  metad_indiv_congruent_ideology_statements[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_congruent_ideology_statements_m_diff_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_congruent_ideology_statements[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_congruent_ideology_statements_m_diff_cleaned.csv"
+  )
+)
+
+write_rds(
+  metad_indiv_incongruent_ideology_statements[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_incongruent_ideology_statements_m_diff_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_incongruent_ideology_statements[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_incongruent_ideology_statements_m_diff_cleaned.csv"
+  )
+)
+
+write_rds(
+  metad_indiv_neutral_ideology_statements[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_neutral_ideology_statements_m_diff_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_neutral_ideology_statements[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_neutral_ideology_statements_m_diff_cleaned.csv"
+  )
+)
+
+write_rds(
+  metad_indiv_congruent_truth_party_statements[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_congruent_truth_party_statements_m_diff_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_congruent_truth_party_statements[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_congruent_truth_party_statements_m_diff_cleaned.csv"
+  )
+)
+
+write_rds(
+  metad_indiv_incongruent_truth_party_statements[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_incongruent_truth_party_statements_m_diff_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_incongruent_truth_party_statements[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_incongruent_truth_party_statements_m_diff_cleaned.csv"
+  )
+)
+
+write_rds(
+  metad_indiv_neutral_truth_party_statements[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_neutral_truth_party_statements_m_diff_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_neutral_truth_party_statements[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_neutral_truth_party_statements_m_diff_cleaned.csv"
+  )
+)
+
+write_rds(
+  metad_indiv_congruent_truth_ideology_statements[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_congruent_truth_ideology_statements_m_diff_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_congruent_truth_ideology_statements[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_congruent_truth_ideology_statements_m_diff_cleaned.csv"
+  )
+)
+
+write_rds(
+  metad_indiv_incongruent_truth_ideology_statements[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_incongruent_truth_ideology_statements_m_diff_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_incongruent_truth_ideology_statements[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_incongruent_truth_ideology_statements_m_diff_cleaned.csv"
+  )
+)
+
+write_rds(
+  metad_indiv_neutral_truth_ideology_statements[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_neutral_truth_ideology_statements_m_diff_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_neutral_truth_ideology_statements[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_neutral_truth_ideology_statements_m_diff_cleaned.csv"
+  )
+)
+
+write_rds(
+  metad_indiv_recognized_statements[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_recognized_statements_m_diff_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_recognized_statements[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_recognized_statements_m_diff_cleaned.csv"
+  )
+)
+
+write_rds(
+  metad_indiv_non_recognized_statements[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_non_recognized_statements_m_diff_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_non_recognized_statements[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_non_recognized_statements_m_diff_cleaned.csv"
+  )
+)
+
+write_rds(
+  metad_indiv_satire_statements[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_satire_statements_m_diff_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_satire_statements[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_satire_statements_m_diff_cleaned.csv"
+  )
+)
+
+write_rds(
+  metad_indiv_non_satire_statements[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_non_satire_statements_m_diff_cleaned.rds"
+  ),
+  compress = "gz"
+)
+write_csv(
+  metad_indiv_non_satire_statements[[6]],
+  here(
+    "output/models/indiv/mdiff_cleaned/metad_indiv_non_satire_statements_m_diff_cleaned.csv"
+  )
+)
+
+```

@@ -1,0 +1,510 @@
+---
+title: "Basic descriptives"
+site: workflowr::wflow_site
+output:
+  workflowr::wflow_html:
+    code_folding: hide
+    number_sections: yes
+    toc: yes
+    toc_depth: 3
+editor_options:
+  chunk_output_type: console
+---
+
+
+
+# Setup
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = TRUE,
+	cache = FALSE
+)
+
+```
+
+
+
+# Source `dependencies.R`
+
+```{r dependencies, message=FALSE, code=readr::read_lines(here::here("code/_dependencies.R"))}
+source(here::here("code/_dependencies.R"))
+
+```
+
+
+
+# Load data
+
+```{r load_data}
+participants <- read_rds(here::here("output/participants.rds"))
+statements <- read_rds(here::here("output/statements.rds"))
+task <- read_rds(here::here("output/task.rds"))
+
+```
+
+
+
+# Participants
+
+## Scatterplot matrix
+
+```{r participants, fig.height=10, fig.width=10}
+skim(participants)
+
+# create scatter plot matrix
+participants %>%
+  ggscatmat(
+    columns = match(
+      c(
+        "age",
+        "educ",
+        "ideology_index",
+        "ideology_index_rounded",
+        "faith_intuition",
+        "need_evidence",
+        "truth_political"
+      ),
+      colnames(participants)
+    ),
+    alpha = .5,
+    corMethod = "spearman"
+  )
+
+```
+
+## Demographics
+
+```{r demographics}
+# all participants
+all_participants <- participants %>%
+  summarize(group = "all participants",
+            n = n(),
+            percentage = 100)
+
+# age
+age <- participants %>%
+  select(age) %>%
+  mutate(
+    group = case_when(
+      age >= 18 & age <= 29 ~ "18-29",
+      age >= 30 & age <= 44 ~ "30-44",
+      age >= 45 & age <= 59 ~ "45-59",
+      age >= 60 ~ "60+"
+    )
+  ) %>%
+  group_by(group) %>%
+  summarize(n = n(),
+            percentage = n() / nrow(participants) * 100)
+
+age %>%
+  verify(sum(.$n) == all_participants$n) %>%
+  assert(within_bounds(0, 100), percentage) %>%
+  verify(sum(.$percentage) == 100)
+
+# gender
+gender <- participants %>%
+  count(gender) %>%
+  rename(group = gender) %>%
+  mutate(percentage = n / sum(n) * 100)
+
+gender %>%
+  verify(sum(.$n) == all_participants$n) %>%
+  assert(within_bounds(0, 100), percentage) %>%
+  verify(sum(.$percentage) == 100)
+
+# education
+educ <- participants %>%
+  count(educ) %>%
+  rename(group = educ) %>%
+  mutate(percentage = n / sum(n) * 100) %>%
+  mutate(group = ordered(
+    group,
+    c(1, 2, 3, 4, 5, 6),
+    c(
+      "No high school degree",
+      "High school graduate",
+      "Some college, but no degree (yet)",
+      "2-year college degree",
+      "4-year college degree",
+      "Postgraduate degree"
+    )
+  ))
+
+educ %>%
+  verify(sum(.$n) == all_participants$n) %>%
+  assert(within_bounds(0, 100), percentage) %>%
+  verify(sum(.$percentage) == 100)
+
+# political party
+party <- participants %>%
+  count(party) %>%
+  rename(group = party) %>%
+  mutate(percentage = n / sum(n) * 100)
+
+party %>%
+  verify(sum(.$n) == all_participants$n) %>%
+  assert(within_bounds(0, 100), percentage) %>%
+  verify(sum(.$percentage) == 100)
+
+# political ideology
+ideology <- participants %>%
+  count(ideology_index_rounded) %>%
+  rename(group = ideology_index_rounded) %>%
+  mutate(percentage = n / sum(n) * 100) %>%
+  mutate(group = ordered(
+    group,
+    c(1, 2, 3, 4, 5, 6, 7),
+    c(
+      "Very Liberal",
+      "Liberal",
+      "Somewhat Liberal",
+      "Moderate or Middle of the Road",
+      "Somewhat Conservative",
+      "Conservative",
+      "Very Conservative"
+    )
+  ))
+
+ideology %>%
+  verify(sum(.$n) == all_participants$n) %>%
+  assert(within_bounds(0, 100), percentage) %>%
+  verify(sum(.$percentage) == 100)
+
+# merge tables
+demos_stats <-
+  bind_rows(all_participants, age, gender, educ, party, ideology) %>%
+  mutate(percentage = round(percentage, 1))
+demos_stats
+
+```
+
+## Epistemic beliefs/age and ideology
+
+### Faith in intuition
+
+```{r faith_in_intuition}
+fig_faith_intuition_ideology <- participants %>%
+  ggplot(aes(x = faith_intuition,
+             y = ideology_index_rounded)) +
+  xlim(1, 5) +
+  ylim(1, 7) +
+  xlab("Faith in intuition for facts") +
+  ylab("Ideology") +
+  stat_smooth(
+    method = "loess",
+    method.args = list(family = "symmetric"),
+    alpha = .15
+  ) +
+  geom_point(alpha = .5) +
+  guides(color = guide_legend(reverse = TRUE),
+         fill = guide_legend(reverse = TRUE))
+
+fig_faith_intuition_ideology <-
+  ggMarginal(fig_faith_intuition_ideology, type = "histogram")
+
+fig_faith_intuition_ideology
+
+cor.test(
+  participants$faith_intuition,
+  participants$ideology_index_rounded,
+  method = c("spearman")
+)
+
+```
+
+### Truth is political
+
+```{r truth_is_political}
+fig_truth_political_ideology <- participants %>%
+  ggplot(aes(x = truth_political,
+             y = ideology_index_rounded)) +
+  xlim(1, 5) +
+  ylim(1, 7) +
+  xlab("Truth is political") +
+  ylab("Ideology") +
+  stat_smooth(
+    method = "loess",
+    method.args = list(family = "symmetric"),
+    alpha = .15
+  ) +
+  geom_point(alpha = .5) +
+  guides(color = guide_legend(reverse = TRUE),
+         fill = guide_legend(reverse = TRUE))
+
+fig_truth_political_ideology <-
+  ggMarginal(fig_truth_political_ideology, type = "histogram")
+
+fig_truth_political_ideology
+
+cor.test(
+  participants$truth_political,
+  participants$ideology_index_rounded,
+  method = c("spearman")
+)
+
+```
+
+### Need for evidence
+
+```{r need_for_evidence}
+fig_need_evidence_ideology <- participants %>%
+  ggplot(aes(x = need_evidence,
+             y = ideology_index_rounded)) +
+  xlim(1, 5) +
+  ylim(1, 7) +
+  xlab("Need for evidence") +
+  ylab("Ideology") +
+  stat_smooth(
+    method = "loess",
+    method.args = list(family = "symmetric"),
+    alpha = .15
+  ) +
+  geom_point(alpha = .5) +
+  guides(color = guide_legend(reverse = TRUE),
+         fill = guide_legend(reverse = TRUE))
+
+fig_need_evidence_ideology <-
+  ggMarginal(fig_need_evidence_ideology, type = "histogram")
+
+fig_need_evidence_ideology
+
+cor.test(
+  participants$need_evidence,
+  participants$ideology_index_rounded,
+  method = c("spearman")
+)
+
+```
+
+### Age
+
+```{r age}
+fig_age_ideology <- participants %>%
+  ggplot(aes(x = age,
+             y = ideology_index_rounded)) +
+  ylim(1, 7) +
+  xlab("Age") +
+  ylab("Ideology") +
+  stat_smooth(
+    method = "loess",
+    method.args = list(family = "symmetric"),
+    alpha = .15
+  ) +
+  geom_point(alpha = .5) +
+  guides(color = guide_legend(reverse = TRUE),
+         fill = guide_legend(reverse = TRUE))
+
+fig_age_ideology <-
+  ggMarginal(fig_age_ideology, type = "histogram")
+
+fig_age_ideology
+
+cor.test(
+  participants$age,
+  participants$ideology_index_rounded,
+  method = c("spearman")
+)
+
+```
+
+### Merge plots
+
+```{r}
+fig_epistemic_beliefs_age_ideology_merged <- ggarrange(
+  fig_faith_intuition_ideology,
+  fig_truth_political_ideology,
+  fig_need_evidence_ideology,
+  fig_age_ideology,
+  ncol = 2,
+  nrow = 2,
+  labels = c("A", "B", "C", "D")
+)
+fig_epistemic_beliefs_age_ideology_merged
+
+save_plot(
+  here("output/figures/fig_epistemic_beliefs_age_ideology_merged.pdf"),
+  fig_epistemic_beliefs_age_ideology_merged,
+  base_width = 10,
+  base_height = 10
+)
+
+```
+
+
+
+# Statements
+
+```{r statements, fig.height=10, fig.width=10}
+skim(statements)
+
+# create scatter plot matrix
+statements %>%
+  ggscatmat(
+    columns = match(
+      c(
+        "wave",
+        "rFavor",
+        "dFavor",
+        "pFavor",
+        "satire"
+      ),
+      colnames(statements)
+    ),
+    alpha = .5,
+    corMethod = "spearman"
+  )
+
+```
+
+
+
+# Misinformation detection task
+
+## Scatterplot matrix
+
+```{r task, fig.height=10, fig.width=10}
+skim(task)
+
+# create scatter plot matrix for participant decisions
+task %>%
+  ggscatmat(
+    columns = match(
+      c(
+        "wave",
+        "rating",
+        "truth",
+        "dec",
+        "dec_correct",
+        "conf_high",
+        "recog",
+        "n_waves",
+        "n_statements",
+        "pFavor"
+      ),
+      colnames(task)
+    ),
+    alpha = .5,
+    corMethod = "spearman"
+  )
+
+# create scatter plot matrix for statement satire and congruency
+task %>%
+  ggscatmat(
+    columns = match(
+      c(
+        "wave",
+        "pFavor",
+        "satire",
+        "congruent_party",
+        "congruent_ideology",
+        "congruent_truth_party",
+        "congruent_truth_ideology"
+      ),
+      colnames(task)
+    ),
+    alpha = .5,
+    corMethod = "spearman"
+  )
+
+```
+
+## Dropout across waves
+
+```{r dropout}
+# number of completed waves per participant
+n_waves <- task %>%
+  group_by(id, wave) %>%
+  summarize(n_items = n()) %>%
+  group_by(id) %>%
+  summarize(n_waves = n())
+
+n_waves %>%
+  assert(in_set(1:12), n_waves)
+
+fig_waves_per_participant <- n_waves %>%
+  ggplot(aes(n_waves)) +
+  geom_bar() +
+  labs(x = "Number of completed waves", y = "Number of participants") +
+  theme_minimal_hgrid() +
+  scale_x_continuous(breaks = pretty_breaks()) +
+  theme(text = element_text(size = 20))
+fig_waves_per_participant
+
+save_plot(
+  here("output/figures/fig_waves_per_participant.pdf"),
+  fig_waves_per_participant,
+  base_width = 12,
+  base_height = 8
+)
+
+# number of statements per participant
+n_statements <- task %>%
+  group_by(id) %>%
+  summarize(n_statements = n())
+
+n_statements %>%
+  assert(in_set(0:240), n_statements)
+
+# assert that there are exactly 20 statements for each participant per wave, but just warn as participants were allowed to skip statements
+n_statements_wave <- task %>%
+  group_by(id, wave) %>%
+  summarize(n_statements_wave = n()) %>%
+  ungroup()
+
+n_statements_wave %>%
+  assert(in_set(20), n_statements_wave, error_fun = just_warn)
+
+# average number of statements per participant
+avg_n_statements <- round(mean(n_statements$n_statements), 1)
+
+# wave completion rates across each of the 12 waves
+wave_completion_rates <- n_statements_wave %>%
+  select(id, wave) %>%
+  group_by(wave) %>%
+  summarise(n = n()) %>%
+  mutate(percentage = round((n / sum(
+    n_statements_wave$wave == 1
+  )) * 100, 1))
+
+wave_completion_rates %>%
+  assert(in_set(1:12), wave) %>%
+  assert(in_set(1:240), n) %>%
+  assert(within_bounds(0, 100), percentage) %>%
+  assert(not_na, everything(), error_fun = just_warn)
+
+fig_wave_completion_rates <- wave_completion_rates %>%
+  ggplot(aes(x = wave, y = n)) +
+  geom_bar(stat = "identity") +
+  labs(x = "Wave", y = "Number of participants") +
+  theme_minimal_hgrid() +
+  scale_x_continuous(breaks = pretty_breaks()) +
+  theme(text = element_text(size = 20))
+fig_wave_completion_rates
+
+save_plot(
+  here("output/figures/fig_wave_completion_rates.pdf"),
+  fig_wave_completion_rates,
+  base_width = 12,
+  base_height = 8
+)
+
+# participants who completed all 12 waves
+n_twelve_waves <- n_waves %>%
+  summarize(n = sum(n_waves == 12)) %>%
+  mutate(percentage = round(n / nrow(n_waves) * 100, 1))
+
+n_twelve_waves %>%
+  assert(within_bounds(0, 100), percentage)
+
+# participants who completed six or more waves
+n_six_or_more_waves <- n_waves %>%
+  summarize(n = sum(n_waves >= 6)) %>%
+  mutate(percentage = round(n / nrow(n_waves) * 100, 1))
+
+n_six_or_more_waves %>%
+  assert(within_bounds(0, 100), percentage)
+
+```

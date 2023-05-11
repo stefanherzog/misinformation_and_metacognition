@@ -1,0 +1,729 @@
+---
+title: "Make data"
+site: workflowr::wflow_site
+output:
+  workflowr::wflow_html:
+    code_folding: hide
+    number_sections: yes
+    toc: yes
+    toc_depth: 3
+editor_options:
+  chunk_output_type: console
+---
+
+
+
+# Setup
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = TRUE,
+  cache = FALSE
+)
+
+```
+
+
+
+# Source `dependencies.R`
+
+```{r dependencies, message=FALSE, code=readr::read_lines(here::here("code/_dependencies.R"))}
+source(here::here("code/_dependencies.R"))
+
+```
+
+
+
+# Load data
+
+## Panel data
+
+```{r load_panel_data}
+# download panel data
+if (!file.exists(here("data", "panelPublic.tab"))) {
+  download_file(url = "https://dataverse.harvard.edu/api/access/datafile/4461145",
+                output = here("data", "panelPublic.tab"))
+}
+
+# load panel data, stratify by ideology, and subsample 20% of all participants
+set.seed(12345)
+subsample <- read_tsv(here("data/panelPublic.tab")) %>%
+  mutate(id = row_number()) %>%
+  replace_with_na(replace = list(
+    polid_W1 = c(8, 9),
+    ecoid_W1 = c(8, 9),
+    socid_W1 = c(8, 9)
+  )) %>%
+  as_tibble %>%
+  rowwise %>%
+  mutate(ideology_index = mean(c(polid_W1, ecoid_W1, socid_W1), na.rm = TRUE)) %>%
+  ungroup %>% # to undo `rowwise`
+  mutate(ideology_index_rounded = round(ideology_index, digit = 0)) %>%
+  group_by(ideology_index_rounded) %>%
+  sample_frac(size = .2)
+
+# create exploratory dataset with 20% subsample
+raw <- read_tsv(here("data/panelPublic.tab")) %>%
+  mutate(id = row_number()) %>%
+  filter(id %in% subsample$id)
+
+raw_n_initial <- nrow(raw)
+
+raw
+
+```
+
+We start out with `r raw_n_initial` participants.
+
+## Statement slant and satire data
+
+```{r load_statement_slant_and_satire_data}
+# download statement slant data
+if (!file.exists(here("data", "AMTstatementSlant.tab"))) {
+  download_file(url = "https://dataverse.harvard.edu/api/access/datafile/4461138",
+                output = here("data", "AMTstatementSlant.tab"))
+}
+
+# load statement slant data
+statements_slant <- read_tsv(here("data/AMTstatementSlant.tab")) %>%
+  separate(statement_num, c("statement", "wave"), "e_W") %>%
+  mutate(wave = as.integer(wave))
+
+# load statement satire data
+statements_satire <-
+  read_delim(
+    here("data/statements_URLs_satire.csv"),
+    delim = ";",
+    escape_double = FALSE,
+    trim_ws = TRUE
+  ) %>%
+  mutate(wave = as.integer(wave))
+
+# create combined statements df
+statements_raw <-
+  list(statements_slant, statements_satire) %>%
+  reduce(full_join, by = c("statement", "wave"))
+
+statements_raw
+
+```
+
+
+
+# Participants
+
+## Demographics
+
+```{r demographics}
+demos <- raw %>%
+  select(id,
+         birthyr,
+         gender,
+         educ) %>%
+  replace_with_na(replace = list(
+    birthyr = c(8, 9),
+    gender = c(8, 9),
+    educ = c(8, 9)
+  )) %>%
+  mutate(age = 2019 - birthyr) %>%
+  mutate(gender = ifelse(gender == 1, "female", "male")) %>%
+  mutate(gender = factor(gender, c("female", "male"))) %>%
+  select(id,
+         age,
+         gender,
+         educ)
+
+# assert data properties
+demos %>%
+  assert(in_set(18:99), age) %>%
+  assert(in_set(1:6), educ) %>%
+  assert(not_na, everything())
+
+```
+
+## Political views
+
+```{r political_views}
+# replace values of 8 (participant did not answer) and 9 (statement was not shown to participant in block or participant did not participate in wave) with NA
+political_views <- raw %>%
+  select(id,
+         pid3,
+         polid_W1,
+         ecoid_W1,
+         socid_W1) %>%
+  replace_with_na(replace = list(
+    polid_W1 = c(8, 9),
+    ecoid_W1 = c(8, 9),
+    socid_W1 = c(8, 9),
+    pid3 = c(8, 9)
+  )) %>%
+  mutate(pid3 = ordered(
+    pid3,
+    c(1, 2, 3, 4, 5),
+    c("Democrat",
+      "Republican",
+      "Independent",
+      "Other",
+      "Not sure")
+  ))
+
+# assert data properties before averaging
+political_views %>%
+  assert(in_set(1:7), polid_W1, ecoid_W1, socid_W1) %>%
+  assert(not_na, everything(), error_fun = just_warn)
+
+# create df
+political_views <- political_views %>%
+  as_tibble %>%
+  rowwise %>%
+  mutate(ideology_index = mean(c(polid_W1, ecoid_W1, socid_W1), na.rm = TRUE)) %>%
+  ungroup %>%
+  mutate(ideology_index_rounded = round(ideology_index, digit = 0)) %>%
+  mutate(ideology = ordered(
+    ideology_index_rounded,
+    c(1, 2, 3, 4, 5, 6, 7),
+    c(
+      "liberal",
+      "liberal",
+      "liberal",
+      "moderate",
+      "conservative",
+      "conservative",
+      "conservative"
+    )
+  )) %>%
+  select(id,
+         party = pid3,
+         ideology_index,
+         ideology_index_rounded,
+         ideology)
+
+political_views
+
+```
+
+## Psychological factors
+
+```{r psychological_factors}
+# replace values of 8 (participant did not answer) and 9 (statement was not shown to participant in block or participant did not participate in wave) with NA
+psychological_factors <- raw %>%
+  select(
+    id,
+    Feel1_W1,
+    Feel2_W1,
+    Feel3_W1,
+    Feel4_W1,
+    Evid1_W1,
+    Evid2_W1,
+    Evid3_W1,
+    Evid4_W1,
+    TIP1_W1,
+    TIP2_W1,
+    TIP3_W1,
+    TIP4_W1
+  ) %>%
+  replace_with_na(
+    replace = list(
+      Feel1_W1 = c(8, 9),
+      Feel2_W1 = c(8, 9),
+      Feel3_W1 = c(8, 9),
+      Feel4_W1 = c(8, 9),
+      Evid1_W1 = c(8, 9),
+      Evid2_W1 = c(8, 9),
+      Evid3_W1 = c(8, 9),
+      Evid4_W1 = c(8, 9),
+      TIP1_W1 = c(8, 9),
+      TIP2_W1 = c(8, 9),
+      TIP3_W1 = c(8, 9),
+      TIP4_W1 = c(8, 9)
+    )
+  )
+
+# assert data properties before averaging
+psychological_factors %>%
+  assert(
+    in_set(1:5),
+    Feel1_W1,
+    Feel2_W1,
+    Feel3_W1,
+    Feel4_W1,
+    Evid1_W1,
+    Evid2_W1,
+    Evid3_W1,
+    Evid4_W1,
+    TIP1_W1,
+    TIP2_W1,
+    TIP3_W1,
+    TIP4_W1
+  ) %>%
+  assert(not_na, everything(), error_fun = just_warn)
+
+# create df
+psychological_factors <- psychological_factors %>%
+  as_tibble %>%
+  rowwise %>%
+  mutate(faith_intuition = mean(c(Feel1_W1, Feel2_W1, Feel3_W1, Feel4_W1), na.rm = TRUE)) %>%
+  mutate(need_evidence = mean(c(Evid1_W1, Evid2_W1, Evid3_W1, Evid4_W1), na.rm = TRUE)) %>%
+  mutate(truth_political = mean(c(TIP1_W1, TIP2_W1, TIP3_W1, TIP4_W1), na.rm = TRUE)) %>%
+  ungroup %>%
+  select(id,
+         faith_intuition,
+         need_evidence,
+         truth_political)
+
+psychological_factors
+
+```
+
+## Combine participant data
+
+```{r participants}
+participants <-
+  list(demos, political_views, psychological_factors) %>%
+  reduce(full_join, by = "id")
+
+participants
+
+```
+
+
+
+# Misinformation detection task
+
+## Rating
+
+```{r rating}
+# e = recognition, b = truth judgment for familiar statements, bn = truth judgment for unfamiliar statements
+# replace values of 8 (participant did not answer) and 9 (statement was not shown to participant in block or participant did not participate in wave) with NA
+rating <- raw %>%
+  select(id,
+         contains("b_W"),
+         contains("bn_W")) %>%
+  pivot_longer(-id, names_to = "statement", values_to = "rating") %>%
+  separate(statement, c("statement", "wave"), "_W") %>%
+  type_convert %>%
+  arrange(id, wave, statement) %>%
+  separate(statement, c("statement", "block"), "b") %>%
+  filter(rating != 8) %>%
+  filter(rating != 9) %>%
+  mutate(recog = ifelse(block == "n", 0, 1)) %>%
+  mutate(truth = case_when(startsWith(statement, "T") ~ 1,
+                           startsWith(statement, "F") ~ 0)) %>%
+  select(-block) %>%
+  mutate(statement = glue("w{wave}_{statement}")) %>%
+  replace_with_na(replace = list(rating = 8)) %>%
+  type_convert
+
+# number of completed waves per participant
+n_waves <- rating %>%
+  group_by(id, wave) %>%
+  summarize(n_items = n()) %>%
+  group_by(id) %>%
+  summarize(n_waves = n())
+
+n_waves %>%
+  assert(in_set(1:12), n_waves)
+
+# number of responses per participant
+n_statements <- rating %>% 
+  group_by(id) %>% 
+  summarize(n_statements = n())
+
+n_statements %>%
+  assert(in_set(0:240), n_statements)
+
+# assert that there are exactly 20 statements for each participant per wave, but just warn as participants were allowed to skip statements
+n_statements_wave <- rating %>%
+  group_by(id, wave) %>%
+  summarize(n_statements_wave = n()) %>%
+  ungroup()
+
+n_statements_wave %>%
+  assert(in_set(20), n_statements_wave, error_fun = just_warn)
+
+# assert data properties
+rating %>%
+  assert(in_set(1:12), wave) %>%
+  assert(in_set(1:4), rating) %>%
+  assert(in_set(0:1), recog) %>%
+  assert(in_set(0:1), truth) %>%
+  assert(not_na, id, statement, wave, truth) %>%
+  assert(not_na, everything(), error_fun = just_warn)
+
+```
+
+## Decision
+
+```{r decision}
+# rating: 1 and 2 = 'true', 3 and 4 = 'false'
+dec <- rating %>%
+  select(-recog) %>%
+  mutate(dec = as.integer(ifelse(rating == 1 |
+                                   rating == 2, 1, 0))) %>%
+  mutate(dec_correct = as.integer(ifelse(dec == truth, 1, 0))) %>%
+  type_convert
+
+# assert data properties
+dec %>%
+  assert(in_set(1:12), wave) %>%
+  assert(in_set(1:4), rating) %>%
+  assert(in_set(0:1), truth) %>%
+  assert(in_set(0:1), dec) %>%
+  assert(in_set(0:1), dec_correct) %>%
+  assert(not_na, id, statement, wave, truth) %>%
+  assert(not_na, everything(), error_fun = just_warn)
+
+```
+
+## Confidence
+
+```{r confidence}
+# rating: 1 and 4 = 'high confidence', 2 and 3 = 'low confidence'
+conf <- rating %>%
+  select(-recog,-truth) %>%
+  mutate(conf_high = as.integer(ifelse(rating == 1 |
+                                         rating == 4, 1, 0))) %>%
+  select(-rating) %>%
+  type_convert
+
+# assert data properties
+conf %>%
+  assert(in_set(1:12), wave) %>%
+  assert(in_set(0:1), conf_high) %>%
+  assert(not_na, id, statement, wave) %>%
+  assert(not_na, everything(), error_fun = just_warn)
+
+```
+
+## Recognition
+
+```{r recognition}
+recog <- raw %>%
+  select(id,
+         contains("e_W"),-c(contains("time"))) %>%
+  pivot_longer(-id, names_to = "statement", values_to = "recog") %>%
+  separate(statement, c("statement", "wave"), "e_W")
+
+# assert data properties before recoding 'recog' variable
+recog %>%
+  assert(in_set(1:12), wave) %>%
+  assert(in_set(1:2), recog) %>%
+  assert(not_na, id, statement, wave) %>%
+  assert(not_na, everything(), error_fun = just_warn)
+
+# recode 'recog' variable
+recog <- recog %>%
+  mutate(recog = as.integer(ifelse(recog == 1, 1, 0))) %>%
+  mutate (statement = glue("w{wave}_{statement}")) %>%
+  filter(!is.na(recog)) %>%
+  type_convert
+
+# assert data properties
+recog %>%
+  assert(in_set(1:12), wave) %>%
+  assert(in_set(0:1), recog) %>%
+  assert(not_na, id, statement, wave) %>%
+  assert(not_na, everything())
+
+# assert same 'recog' responses for 'rating' and 'recog' dfs
+overlap <- list(rating, recog) %>%
+  reduce(full_join, by = c("id", "statement", "wave")) %>%
+  select(-rating, -truth) %>%
+  mutate(overlap = as.integer(ifelse(recog.x == recog.y, 1, 0)))
+
+overlap %>%
+  assert(in_set(1), overlap)
+
+recog
+
+```
+
+## Statement slant and satire
+
+```{r statements_slant_and_satire}
+# recode statement slant data from 1/2/3 (pro-Democrat/pro-Republican/neutral) to 1/-1/0
+statements <- statements_raw %>%
+  mutate(rFavor = as.integer(ifelse(rFavor == 1, rFavor, rFavor - 3))) %>%
+  mutate(dFavor = as.integer(ifelse(dFavor == 1, dFavor, dFavor - 3))) %>%
+  mutate(pFavor = as.integer(ifelse(pFavor == 1, pFavor, pFavor - 3))) %>%
+  mutate(statement = glue("w{wave}_{statement}"))
+
+# assert data properties
+statements %>%
+  assert(in_set(1:12), wave) %>%
+  assert(in_set(-1:1), rFavor) %>%
+  assert(in_set(-1:1), dFavor) %>%
+  assert(in_set(-1:1), pFavor) %>%
+  assert(in_set(0:1), satire) %>%
+  assert(not_na, everything())
+
+statements
+
+```
+
+## Statement congruency
+
+```{r statement_congruency}
+# add political congruency of statements (1 = congruent; 2 = incongruent; 3 = neutral; 4 = neither congruent, incongruent, or neutral)
+# `congruent_party` = statement congruency as a combination of a participant's political party and statement slant
+# `congruent_ideology` = statement congruency as a combination of a participant's political ideology and statement slant
+# `congruent_truth_party` = statement congruency as a combination of a participant's political party, statement slant, and statement veracity
+# `congruent_truth_ideology` = statement congruency as a combination of a participant's political ideology, statement slant, and statement veracity
+congruency <- dec %>%
+  select(id, statement, wave, truth) %>%
+  list(statements) %>%
+  reduce(left_join, by = c("statement", "wave")) %>%
+  list(participants) %>%
+  reduce(full_join, by = c("id")) %>%
+  select(id, statement, wave, truth, pFavor, party, ideology) %>%
+  mutate(
+    congruent_party = case_when(
+      party == "Democrat" &
+        pFavor == "1" ~ 1,
+      party == "Republican" &
+        pFavor == "-1" ~ 1,
+      party == "Democrat" &
+        pFavor == "-1" ~ 2,
+      party == "Republican" &
+        pFavor == "1" ~ 2,
+      party == "Democrat" &
+        pFavor == "0" ~ 3,
+      party == "Republican" &
+        pFavor == "0" ~ 3,
+      party == "Independent" &
+        pFavor == "1" ~ 4,
+      party == "Independent" &
+        pFavor == "-1" ~ 4,
+      party == "Independent" &
+        pFavor == "0" ~ 4,
+      party == "Other" &
+        pFavor == "1" ~ 4,
+      party == "Other" &
+        pFavor == "-1" ~ 4,
+      party == "Other" &
+        pFavor == "0" ~ 4,
+      party == "Not sure" &
+        pFavor == "1" ~ 4,
+      party == "Not sure" &
+        pFavor == "-1" ~ 4,
+      party == "Not sure" &
+        pFavor == "0" ~ 4,
+    )
+  )  %>%
+  mutate(
+    congruent_ideology = case_when(
+      ideology == "liberal" &
+        pFavor == "1" ~ 1,
+      ideology == "liberal" &
+        pFavor == "-1" ~ 2,
+      ideology == "liberal" &
+        pFavor == "0" ~ 3,
+      ideology == "moderate" &
+        pFavor == "1" ~ 4,
+      ideology == "moderate" &
+        pFavor == "-1" ~ 4,
+      ideology == "moderate" &
+        pFavor == "0" ~ 4,
+      ideology == "conservative" &
+        pFavor == "1" ~ 2,
+      ideology == "conservative" &
+        pFavor == "-1" ~ 1,
+      ideology == "conservative" &
+        pFavor == "0" ~ 3,
+    )
+  )  %>%
+  mutate(
+    congruent_truth_party = as.numeric(case_when(
+      party == "Democrat" & pFavor == 1 & truth == 1 ~ "1",
+      party == "Democrat" & pFavor == 1 & truth == 0 ~ "2",
+      party == "Democrat" & pFavor == -1 & truth == 1 ~ "2",
+      party == "Democrat" & pFavor == -1 & truth == 0 ~ "1",
+      party == "Democrat" & pFavor == 0 & truth == 1 ~ "3",
+      party == "Democrat" & pFavor == 0 & truth == 0 ~ "3",
+      party == "Republican" & pFavor == 1 & truth == 1 ~ "2",
+      party == "Republican" & pFavor == 1 & truth == 0 ~ "1",
+      party == "Republican" & pFavor == -1 & truth == 1 ~ "1",
+      party == "Republican" & pFavor == -1 & truth == 0 ~ "2",
+      party == "Republican" & pFavor == 0 & truth == 1 ~ "3",
+      party == "Republican" & pFavor == 0 & truth == 0 ~ "3",
+      party == "Independent" ~ "4",
+      party == "Other" ~ "4",
+      party == "Not sure" ~ "4",
+    ))
+  ) %>%
+  mutate(
+    congruent_truth_ideology = as.numeric(case_when(
+      ideology == "liberal" & pFavor == 1 & truth == 1 ~ "1",
+      ideology == "liberal" & pFavor == 1 & truth == 0 ~ "2",
+      ideology == "liberal" & pFavor == -1 & truth == 1 ~ "2",
+      ideology == "liberal" & pFavor == -1 & truth == 0 ~ "1",
+      ideology == "liberal" & pFavor == 0 & truth == 1 ~ "3",
+      ideology == "liberal" & pFavor == 0 & truth == 0 ~ "3",
+      ideology == "conservative" & pFavor == 1 & truth == 1 ~ "2",
+      ideology == "conservative" & pFavor == 1 & truth == 0 ~ "1",
+      ideology == "conservative" & pFavor == -1 & truth == 1 ~ "1",
+      ideology == "conservative" & pFavor == -1 & truth == 0 ~ "2",
+      ideology == "conservative" & pFavor == 0 & truth == 1 ~ "3",
+      ideology == "conservative" & pFavor == 0 & truth == 0 ~ "3",
+      ideology == "moderate" ~ "4",
+    ))
+  ) %>%
+  select(-pFavor, -truth, -party, -ideology)
+
+# assert data properties
+congruency %>%
+  assert(in_set(1:4), congruent_party) %>%
+  assert(in_set(1:4), congruent_ideology) %>%
+  assert(in_set(1:4), congruent_truth_party) %>%
+  assert(in_set(1:4), congruent_truth_ideology) %>%  
+  assert(not_na, everything())
+
+```
+
+
+## Combine task data
+
+```{r combined}
+task <- list(dec, conf, recog) %>%
+  reduce(full_join, by = c("id", "statement", "wave"))
+
+task <- list(task, n_waves) %>%
+  reduce(full_join, by = c("id"))
+
+task <- list(task, n_statements) %>%
+  reduce(full_join, by = c("id"))
+
+task <- list(task, statements) %>% 
+  reduce(left_join, by = c("statement", "wave")) %>% 
+  select(-rFavor, -dFavor, -veracity, -statements, -url)
+
+task <- list(task, congruency) %>% 
+  reduce(full_join, by = c("id", "statement", "wave"))
+
+# add dummy variable for `trials2counts.Rmd`
+task <- task %>% 
+  mutate(dummy = 1)
+
+# assert data properties
+task %>%
+  assert(not_na, everything(), error_fun = just_warn)
+
+task <- task %>%
+  filter(!is.na(rating))
+
+task %>%
+  assert(not_na, everything())
+
+```
+
+
+
+# Satisficing
+
+We seek to exclude participants who are strongly satisficing in their study
+participation. Thus, we exclude participants' wave-level data for waves in which
+they chose one of the four response options more than 90% of the time (following
+Rollwage et al., 2018; https://doi.org/10.1016/j.cub.2018.10.053). 
+
+```{r detecting_satisficing}
+# identify id's and waves for which participants selected one response option more than 90% of the time
+participants_satisficing <- task %>%
+  group_by(id, wave, rating) %>%
+  summarize(n_rating_selected = n()) %>%
+  full_join(task %>%
+              group_by(id, wave) %>%
+              summarize(n_statements_wave = n()),
+            by = c("id", "wave")) %>%
+  mutate(perc_same_rating = n_rating_selected / n_statements_wave) %>%
+  filter(perc_same_rating > .9) %>%
+  ungroup
+
+# assert data properties
+participants_satisficing %>%
+  assert(in_set(1:20), n_rating_selected, n_statements_wave) %>%
+  assert(within_bounds(.9, 1, include.lower = FALSE, include.upper = TRUE),
+         perc_same_rating) %>%
+  assert(not_na, everything(), error_fun = just_warn)
+
+# count participants satisficing
+n_participants_satisficing <- participants_satisficing %>%
+  distinct(id) %>%
+  n_distinct()
+
+perc_participants_satisficing <-
+  (n_participants_satisficing / raw_n_initial) * 100
+
+# count wave-id combinations to exclude
+n_waves_excluded <- nrow(participants_satisficing)
+
+perc_waves_excluded <-
+  (n_waves_excluded / nrow(n_statements_wave)) * 100
+
+```
+
+Exclude wave-level data from `task` df for waves in which participants satisficed
+and id's from `participants` df for id's which satisficed in all waves in which
+they participated.
+
+```{r exclude_satisficing_data}
+# exclude wave-level data for satisficing participants from the `task` df
+task <- task %>%
+  anti_join(participants_satisficing, by = c("id", "wave"))
+
+# remove id's who satisficed in all waves in which they participated from the `participants` df
+participants_excluded <- participants_satisficing %>%
+  count(id, name = "n_waves_satisficed") %>%
+  inner_join(n_waves, by = "id") %>%
+  mutate(perc_waves_satisficed = n_waves_satisficed / n_waves) %>%
+  filter(perc_waves_satisficed == 1)
+
+n_participants_excluded <- nrow(participants_excluded)
+
+perc_participants_excluded <-
+  (n_participants_excluded / raw_n_initial) * 100
+
+n_participants_final <- raw_n_initial - n_participants_excluded
+
+participants <- participants %>%
+  anti_join(participants_excluded, by = "id")
+
+```
+
+Based on our criterion for detecting satisficing, we exclude wave-level data from
+`r n_participants_satisficing` participants (`r perc_participants_satisficing`%).
+Specifically, we excluded `r n_waves_excluded` wave-id combinations (`r perc_waves_excluded`%).
+This led to `r n_participants_excluded` participants (`r perc_participants_excluded`%)
+being entirely excluded from the data, yielding a sample size of `r n_participants_final`
+participants for model fitting using a hierarchical Bayesian approach (Fleming, 2017).
+
+
+
+# Check overlap ids in `participants` and `task` dfs
+
+```{r overlap}
+# participants need to appear in both data frames
+expect_equal(nrow(anti_join(participants, task)), 0)
+expect_equal(nrow(anti_join(task, participants)), 0)
+
+```
+
+
+
+# Write to disk
+
+```{r write_to_disk}
+write_rds(raw, here("output/raw.rds"), compress = "gz")
+write_csv(raw, here("output/raw.csv"))
+
+write_rds(statements, here("output/statements.rds"), compress = "gz")
+write_csv(statements, here("output/statements.csv"))
+
+write_rds(task, here("output/task.rds"), compress = "gz")
+write_csv(task, here("output/task.csv"))
+
+write_rds(participants, here("output/participants.rds"), compress = "gz")
+write_csv(participants, here("output/participants.csv"))
+
+```
