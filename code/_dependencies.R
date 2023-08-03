@@ -7,6 +7,8 @@ if (!require("pacman")) install.packages("pacman"); library(pacman)
 
 p_load(
   assertr,
+  assertthat,
+  sessioninfo,
   readr,
   testthat,
   estimatr,
@@ -38,8 +40,12 @@ p_load(
   ggdist,
   see,
   mcmcr,
-  coda
+  coda,
+  BayesFactor
 )
+
+session_info() %>% 
+  write_lines(here("output/session_info.txt"))
 
 fnc_outlier <- function(x) {
   iqr <- IQR(x, na.rm = TRUE)

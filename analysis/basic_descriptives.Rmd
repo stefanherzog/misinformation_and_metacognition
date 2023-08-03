@@ -302,17 +302,15 @@ fig_age_ideology <-
 
 fig_age_ideology
 
-cor.test(
-  participants$age,
-  participants$ideology_index_rounded,
-  method = c("spearman")
-)
+cor.test(participants$age,
+         participants$ideology_index_rounded,
+         method = c("spearman"))
 
 ```
 
 ### Merge plots
 
-```{r}
+```{r merge_plots}
 fig_epistemic_beliefs_age_ideology_merged <- ggarrange(
   fig_faith_intuition_ideology,
   fig_truth_political_ideology,
@@ -323,13 +321,6 @@ fig_epistemic_beliefs_age_ideology_merged <- ggarrange(
   labels = c("A", "B", "C", "D")
 )
 fig_epistemic_beliefs_age_ideology_merged
-
-save_plot(
-  here("output/figures/fig_epistemic_beliefs_age_ideology_merged.pdf"),
-  fig_epistemic_beliefs_age_ideology_merged,
-  base_width = 10,
-  base_height = 10
-)
 
 ```
 
@@ -344,13 +335,11 @@ skim(statements)
 statements %>%
   ggscatmat(
     columns = match(
-      c(
-        "wave",
+      c("wave",
         "rFavor",
         "dFavor",
         "pFavor",
-        "satire"
-      ),
+        "satire"),
       colnames(statements)
     ),
     alpha = .5,
@@ -464,15 +453,11 @@ avg_n_statements <- round(mean(n_statements$n_statements), 1)
 wave_completion_rates <- n_statements_wave %>%
   select(id, wave) %>%
   group_by(wave) %>%
-  summarise(n = n()) %>%
-  mutate(percentage = round((n / sum(
-    n_statements_wave$wave == 1
-  )) * 100, 1))
+  summarise(n = n())
 
 wave_completion_rates %>%
   assert(in_set(1:12), wave) %>%
-  assert(in_set(1:240), n) %>%
-  assert(within_bounds(0, 100), percentage) %>%
+  assert(in_set(1:1191), n) %>%
   assert(not_na, everything(), error_fun = just_warn)
 
 fig_wave_completion_rates <- wave_completion_rates %>%

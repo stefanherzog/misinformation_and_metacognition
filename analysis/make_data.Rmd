@@ -47,27 +47,9 @@ if (!file.exists(here("data", "panelPublic.tab"))) {
                 output = here("data", "panelPublic.tab"))
 }
 
-# load panel data, stratify by ideology, and subsample 20% of all participants
-set.seed(12345)
-subsample <- read_tsv(here("data/panelPublic.tab")) %>%
-  mutate(id = row_number()) %>%
-  replace_with_na(replace = list(
-    polid_W1 = c(8, 9),
-    ecoid_W1 = c(8, 9),
-    socid_W1 = c(8, 9)
-  )) %>%
-  as_tibble %>%
-  rowwise %>%
-  mutate(ideology_index = mean(c(polid_W1, ecoid_W1, socid_W1), na.rm = TRUE)) %>%
-  ungroup %>% # to undo `rowwise`
-  mutate(ideology_index_rounded = round(ideology_index, digit = 0)) %>%
-  group_by(ideology_index_rounded) %>%
-  sample_frac(size = .2)
-
-# create exploratory dataset with 20% subsample
+# load panel data
 raw <- read_tsv(here("data/panelPublic.tab")) %>%
-  mutate(id = row_number()) %>%
-  filter(id %in% subsample$id)
+  mutate(id = row_number()) 
 
 raw_n_initial <- nrow(raw)
 
@@ -198,7 +180,8 @@ political_views <- political_views %>%
          party = pid3,
          ideology_index,
          ideology_index_rounded,
-         ideology)
+         ideology) %>%
+  filter(!is.na(ideology_index_rounded))
 
 political_views
 
@@ -271,7 +254,10 @@ psychological_factors <- psychological_factors %>%
   select(id,
          faith_intuition,
          need_evidence,
-         truth_political)
+         truth_political) %>%
+  filter(!is.na(faith_intuition)) %>% 
+  filter(!is.na(need_evidence)) %>% 
+  filter(!is.na(truth_political))
 
 psychological_factors
 
@@ -281,8 +267,15 @@ psychological_factors
 
 ```{r participants}
 participants <-
-  list(demos, political_views, psychological_factors) %>%
-  reduce(full_join, by = "id")
+  list(demos, psychological_factors) %>%
+  reduce(inner_join, by = "id")
+
+participants <- participants %>%
+  list(political_views) %>%
+  reduce(inner_join, by = "id")
+
+participants %>%
+  assert(not_na, everything(), error_fun = just_warn)
 
 participants
 
@@ -472,11 +465,17 @@ statements
 # `congruent_truth_party` = statement congruency as a combination of a participant's political party, statement slant, and statement veracity
 # `congruent_truth_ideology` = statement congruency as a combination of a participant's political ideology, statement slant, and statement veracity
 congruency <- dec %>%
-  select(id, statement, wave, truth) %>%
+  select(id, statement, wave, truth)
+
+congruency <- congruency %>%
   list(statements) %>%
-  reduce(left_join, by = c("statement", "wave")) %>%
+  reduce(left_join, by = c("statement", "wave"))
+
+congruency <- congruency %>%
   list(participants) %>%
-  reduce(full_join, by = c("id")) %>%
+  reduce(right_join, by = c("id"))
+
+congruency <- congruency %>%
   select(id, statement, wave, truth, pFavor, party, ideology) %>%
   mutate(
     congruent_party = case_when(
@@ -611,7 +610,8 @@ task %>%
   assert(not_na, everything(), error_fun = just_warn)
 
 task <- task %>%
-  filter(!is.na(rating))
+  filter(!is.na(rating)) %>%
+  filter(!is.na(congruent_party))
 
 task %>%
   assert(not_na, everything())
@@ -684,10 +684,10 @@ n_participants_excluded <- nrow(participants_excluded)
 perc_participants_excluded <-
   (n_participants_excluded / raw_n_initial) * 100
 
-n_participants_final <- raw_n_initial - n_participants_excluded
-
 participants <- participants %>%
   anti_join(participants_excluded, by = "id")
+
+n_participants_final <- nrow(participants)
 
 ```
 

@@ -148,8 +148,25 @@ source(here::here("code/fleming_code/Function_metad_group.R"))
 
 ```{r function_metad_group_mcmc}
 # define wrapper function around `metad_group` for mcmc results
-fnc_metad_group_mcmc <- function(df, str_label, n_adapt = 10000) {
+fnc_metad_group_mcmc <- function(df, n_adapt = 10000) {
   # turn the data into the format we see in Fleming's example file
+  
+  # Check if df is a data frame
+  if (!is.data.frame(df)) {
+    stop("The input df needs to be a data frame.")
+  }
+  
+  # Check if df contains column output
+  if (!"output" %in% names(df)) {
+    stop("The input data frame is missing the required 'output' column.")
+  }
+  
+  # Check if n_adapt is numeric and positive
+  if (!is.numeric(n_adapt) | n_adapt <= 0) {
+    stop("The argument n_adapt needs to be a positive numeric value.")
+  }
+  
+  # Add S1 and S2 columns to df
   df <- df %>%
     mutate(
       S1 = map(output, function(x)
@@ -158,39 +175,112 @@ fnc_metad_group_mcmc <- function(df, str_label, n_adapt = 10000) {
         data.frame(t(x[2][[1]])))
     )
   
+  
+  # Check that all elements of S1 and S2 are data frames with one row and four columns
+  df %>%
+    mutate(S1_check = map(S1, function(x) {
+      assert_that(is.data.frame(x), msg = "Elements of S1 are not all data frames.")
+      assert_that(nrow(x) == 1,
+                  msg = "Not all data frames in S1 have exactly one row.")
+      assert_that(ncol(x) == 4,
+                  msg = "Not all data frames in S1 have exactly four columns.")
+    }),
+    S2_check = map(S2, function(x) {
+      assert_that(is.data.frame(x),
+                  msg = "Elements of S2 are not all data frames.")
+      assert_that(nrow(x) == 1,
+                  msg = "Not all data frames in S2 have exactly one row.")
+      assert_that(ncol(x) == 4,
+                  msg = "Not all data frames in S2 have exactly four columns.")
+    }))
+  
+  # Create separate data frames for S1 and S2
   nR_S1 <- data.frame(t(bind_rows(df$S1)))
   nR_S2 <- data.frame(t(bind_rows(df$S2)))
   
+  # Perform checks on nR_S1 and nR_S2
+  assert_that(
+    is.data.frame(nR_S1),
+    is.data.frame(nR_S2),
+    nrow(nR_S1) == 4,
+    nrow(nR_S2) == 4,
+    ncol(nR_S1) == nrow(df),
+    ncol(nR_S2) == nrow(df),
+    msg = "nR_S1 and nR_S2 should be data frames with four rows
+    and the same number of columns as the number of rows in the df dataframe."
+  )
+  
+  # Run metad_group function to obtain mcmc output
   output <-
     metad_group(nR_S1 = list(nR_S1),
                 nR_S2 = list(nR_S2),
                 n_adapt = n_adapt)
   
-  # Values
+  # Check if output is a valid mcmc.list
+  assert_that(is.mcmc.list(output),
+              msg = "output should be a valid mcmc.list")
+  
+  # Obtain summary statistics from output
   Value <- summary(output)
+  
+  # Check if Value is a valid summary.mcmc object
+  assert_that(class(Value) == "summary.mcmc",
+              msg = "Value should be a valid summary.mcmc")
+  
+  # Extract mean statistics
   stat <- data.frame(mean = Value$statistics[, "Mean"])
   stat %<>%
     rownames_to_column(var = "name")
-
-  # Rhat
+  
+  # Calculate Gelman-Rubin Rhat statistics
   Value <- gelman.diag(output, confidence = 0.95)
   Rhat <- data.frame(conv = Value$psrf)
-
-  # HDI
+  
+  # Calculate highest posterior density intervals (HDI)
   HDI <-
-    data.frame(HPDinterval(runjags::combine.mcmc(output), prob = 0.95)) 
-
+    data.frame(HPDinterval(runjags::combine.mcmc(output), prob = 0.95))
   HDI %<>%
     rownames_to_column(var = "name")
-
-  # All values in the same dataframe
+  
+  # Combine all values into Fit dataframe
   Fit <- stat %>%
     cbind(lower = HDI$lower,
           upper = HDI$upper,
           Rhat = Rhat[, 1])
+  # Check Fit dataframe
+  assert_that(# Check that Fit is a data frame
+    is.data.frame(Fit),
+    msg = "Fit should be a data frame")
   
-  # mcmc values in df for plot posterior distributions
+  assert_that(# Check the column names
+    all(colnames(Fit) %in% c("name", "mean", "lower", "upper", "Rhat")),
+    msg = "Columns of Fit should be 'name', 'mean', 'lower', 'upper', and 'Rhat'")
+  
+  assert_that(
+    # Check the class of each column
+    is.character(Fit$name) && is.numeric(Fit$mean) &&
+      is.numeric(Fit$lower) &&
+      is.numeric(Fit$upper) && is.numeric(Fit$Rhat),
+    msg = "Column classes of Fit are not as expected"
+  )
+  
+  assert_that(# Check the number of rows
+    nrow(Fit) == 2,
+    msg = "Fit should have exactly 2 rows")
+  
+  
+  # Obtain mcmc sample for posterior distributions plotting
   mcmc.sample <- ggs(output)
+  
+  # Check mcmc.sample
+  assert_that(inherits(mcmc.sample, "tbl_df"),
+              msg = "mcmc.sample should be a tbl_df")
+  assert_that(all(
+    colnames(mcmc.sample) %in% c("Iteration", "Chain", "Parameter", "value")
+  ),
+  msg = "mcmc.sample should have columns 'Iteration', 'Chain', 'Parameter', and 'value'")
+  assert_that(nrow(mcmc.sample) > 0,
+              msg = "mcmc.sample should have at least one row of data")
   
   # Return results
   return(list(mcmc.sample, stat, HDI, output))
@@ -208,6 +298,30 @@ fnc_metad_group <-
            str_items,
            n_adapt = 10000) {
     # turn the data into the format we see in Fleming's example file
+    
+    
+    # Check if df is a data frame
+    if (!is.data.frame(df)) {
+      stop("The input df needs to be a data frame.")
+    }
+    
+    # Check if df contains column output
+    if (!"output" %in% names(df)) {
+      stop("The input data frame is missing the required 'output' column.")
+    }
+    
+    # Check if str_label, str_group, and str_items are character strings
+    if (!is.character(str_label) |
+        !is.character(str_group) | !is.character(str_items)) {
+      stop("The arguments str_label, str_group, and str_items need to be character strings.")
+    }
+    
+    # Check if n_adapt is numeric and positive
+    if (!is.numeric(n_adapt) | n_adapt <= 0) {
+      stop("The argument n_adapt needs to be a positive numeric value.")
+    }
+    
+    # Add S1 and S2 columns to df
     df <- df %>%
       mutate(
         S1 = map(output, function(x)
@@ -216,15 +330,45 @@ fnc_metad_group <-
           data.frame(t(x[2][[1]])))
       )
     
+    # Check that all elements of S1 and S2 are data frames with one row and four columns
+    df %>%
+      mutate(S1_check = map(S1, function(x) {
+        assert_that(is.data.frame(x),
+                    msg = "Elements of S1 are not all data frames.")
+        assert_that(nrow(x) == 1,
+                    msg = "Not all data frames in S1 have exactly one row.")
+        assert_that(ncol(x) == 4,
+                    msg = "Not all data frames in S1 have exactly four columns.")
+      }),
+      S2_check = map(S2, function(x) {
+        assert_that(is.data.frame(x),
+                    msg = "Elements of S2 are not all data frames.")
+        assert_that(nrow(x) == 1,
+                    msg = "Not all data frames in S2 have exactly one row.")
+        assert_that(ncol(x) == 4,
+                    msg = "Not all data frames in S2 have exactly four columns.")
+      }))
+    
+    # Create separate data frames for S1 and S2
     nR_S1 <- data.frame(t(bind_rows(df$S1)))
     nR_S2 <- data.frame(t(bind_rows(df$S2)))
     
+    # Run metad_group function to obtain mcmc output
     output <-
       metad_group(nR_S1 = list(nR_S1),
                   nR_S2 = list(nR_S2),
                   n_adapt = n_adapt)
     
+    # Check output is a valid mcmc.list object
+    assert_that(is.mcmc.list(output),
+                msg = "output should be a valid mcmc.list")
+    
+    # Function to enhance mcmc chains with additional variables
     fnc_mcmc_calc <- function(x) {
+      assert_that(all(c("mu_d1", "mu_logMratio") %in% colnames(x)),
+                  msg = "Column names of x are not as expected")
+      
+      # Perform calculations on mcmc chains
       x <- x %>%
         as_tibble %>%
         rename(d1_g = mu_d1) %>%
@@ -237,18 +381,28 @@ fnc_metad_group <-
         as.mcmc
     }
     
+    # Apply fnc_mcmc_calc to the mcmc chains of each participant
     mcmc_chains <- output %>%
       lapply(fnc_mcmc_calc)
     
-    all_samples <- combine.mcmc(mcmc_chains) %>%
-      as_tibble
+    # Check that mcmc_chains contains valid mcmc objects
+    assert_that(all(sapply(mcmc_chains, is.mcmc)),
+                msg = "mcmc_chains should contain valid mcmc objects")
     
+    # Combine mcmc chains into a single data frame
+    all_samples <- combine.mcmc(mcmc_chains) %>% as_tibble
+    assert_that(is.data.frame(all_samples), msg = "all_samples should be a data frame")
+    
+    # Calculate median and credible intervals (stats)
     stats <- median_qi(all_samples)
+    assert_that(is.data.frame(stats), msg = "stats should be a data frame")
     
-    # Rhat
+    # Calculate Gelman-Rubin Rhat statistics
     Value <- gelman.diag(output, confidence = 0.95)
     Rhat <- data.frame(conv = Value$psrf)
+    assert_that(is.data.frame(Rhat), msg = "Rhat should be a data frame")
     
+    # Reshape Rhat dataframe
     Rhats <- Rhat %>%
       as_tibble(rownames = "variable") %>%
       select(-conv.Upper.C.I.) %>%
@@ -257,10 +411,13 @@ fnc_metad_group <-
         values_from = conv.Point.est.,
         names_prefix = "Rhat_"
       )
+    assert_that(is.data.frame(Rhats), msg = "Rhats should be a data frame")
     
+    # Combine stats and Rhats into mcmc_results dataframe
     mcmc_results <- bind_cols(stats, Rhats)
+    assert_that(is.data.frame(mcmc_results), msg = "mcmc_results should be a data frame")
     
-    # Extract aggregate Mratio results
+    # Add label, group, and items columns to mcmc_results
     mcmc_results <- mcmc_results %>%
       mutate(
         name = str_label,
@@ -269,18 +426,24 @@ fnc_metad_group <-
         .before = "d1_g"
       )
     
+    # Check mcmc_results columns
+    assert_that(all(c("name", "group", "items") %in% colnames(mcmc_results)),
+                msg = "Required columns 'name', 'group', and 'items' are missing in 'mcmc_results'")
+    
     # Return results
     return(mcmc_results)
   }
 
 ```
 
+
+
 ## Run models
 
 ```{r group_models}
 # mcmc
 metad_group_all_participants_mcmc <-
-  fnc_metad_group_mcmc(counts_all_participants, "all participants")
+  fnc_metad_group_mcmc(counts_all_participants)
 
 # aggregate results
 metad_group_all_participants <-
@@ -457,7 +620,8 @@ metad_group_satire_statements <-
   fnc_metad_group(counts_satire_statements,
                   "satire statements",
                   "all",
-                  "satire")
+                  "satire",
+                  n_adapt = 30000)
 
 metad_group_non_satire_statements <-
   fnc_metad_group(counts_non_satire_statements,
@@ -614,7 +778,8 @@ metad_group_somewhat_liberal_congruent_statements <-
     counts_somewhat_liberal_congruent_statements,
     "somewhat liberal congruent statements (ideology only)",
     "somewhat liberal",
-    "congruent_ideology"
+    "congruent_ideology",
+    n_adapt = 30000
   )
 
 metad_group_somewhat_liberal_incongruent_statements <-
@@ -694,7 +859,8 @@ metad_group_very_conservative_incongruent_statements <-
     counts_very_conservative_incongruent_statements,
     "very conservative incongruent statements (ideology only)",
     "very conservative",
-    "incongruent_ideology"
+    "incongruent_ideology",
+    n_adapt = 30000
   )
 
 metad_group_very_conservative_neutral_statements <-
@@ -750,7 +916,8 @@ metad_group_republican_neutral_truth_statements <-
     counts_republican_neutral_truth_statements,
     "republican neutral statements (party*truth)",
     "republican",
-    "neutral_truth_party"
+    "neutral_truth_party",
+    n_adapt = 30000
   )
 
 metad_group_liberal_pooled_congruent_truth_statements <-
@@ -1075,29 +1242,43 @@ source(here::here("code/fleming_code/Function_metad_indiv.R"))
 
 fnc_metad_indiv <- function(df) {
   # define wrapper function around `metad_indiv`
+  
+  # Check if df is a data frame
+  if (!is.data.frame(df)) {
+    stop("The input df needs to be a data frame.")
+  }
+  
+  # Check if df contains column output
+  if (!"output" %in% names(df)) {
+    stop("The input data frame is missing the required 'output' column.")
+  }
+  
+  # Define wrapper function for individual-level analysis
   fnc_metad_indiv_fleming <- function(l) {
     output <- metad_indiv(nR_S1 = l[[1]], nR_S2 = l[[2]])
     return(output)
   }
   
-  # define model
+  # Create a model dataframe by applying the fnc_metad_indiv_fleming function to the output column of df
   model <-
     df %>% mutate(mcmc = map(.x = output, .f = fnc_metad_indiv_fleming))
   
-  # function that takes the list object with the three chains
-  # and extracts the posterior information
+  # Check that the mcmc column of the model dataframe contains valid mcmc.list objects
+  assert_that(all(sapply(model$mcmc, is.mcmc.list)),
+              msg = "The 'model' dataframe should have a valid 'mcmc' column with each row containing a valid mcmc.list object.")
+  
+  # Function to extract posterior information from the mcmc chains
   fnc_extract_posterior_infos <- function(chains) {
     try({
-      # turn mcmc.list into a tidybayes data frame
-      # calculate new variables
-      # only keep relevant variables
+      # Convert mcmc.list into a tidybayes data frame
+      # Calculate new variables and select relevant variables
       tbl_mcmc <- chains %>%
         tidybayes::tidy_draws() %>%
         dplyr::mutate(m_ratio = meta_d / d1,
                       m_diff = meta_d - d1) %>%
         select(.chain, d1, meta_d, m_ratio, m_diff)
       
-      # turn tbl_mcmc back into an mcmc.list to be able to calculate the rhats
+      # Convert tbl_mcmc back into an mcmc.list to calculate the rhats
       list_mcmc <- tbl_mcmc %>%
         group_by(.chain) %>%
         nest() %>%
@@ -1107,7 +1288,7 @@ fnc_metad_indiv <- function(df) {
         .$data %>%
         mcmc.list()
       
-      # calculate the rhats
+      # Calculate the rhats
       rhats <- mcmcr::rhat(list_mcmc, by = "term") %>%
         as_tibble() %>%
         rename(
@@ -1117,9 +1298,8 @@ fnc_metad_indiv <- function(df) {
           meta_d.rhat = meta_d
         )
       
-      # create output object
-      # by calculating the point estimates and credible intervals
-      # plus the rhats
+      # Create output object by calculating point estimates,
+      # credible intervals, and adding rhats
       y <- tbl_mcmc %>%
         ggdist::median_qi() %>%
         bind_cols(rhats)
@@ -1134,17 +1314,85 @@ fnc_metad_indiv <- function(df) {
   model_infos <- model %>%
     mutate(posterior_infos = map(.x = mcmc, .f = fnc_extract_posterior_infos))
   
-  # using `unnest` we add these new variables to the main data frame
+  # Define the expected column names for the posterior_infos tibbles
+  expected_columns <-
+    c(
+      "d1",
+      "d1.lower",
+      "d1.upper",
+      "meta_d",
+      "meta_d.lower",
+      "meta_d.upper",
+      "m_ratio",
+      "m_ratio.lower",
+      "m_ratio.upper",
+      "m_diff",
+      "m_diff.lower",
+      "m_diff.upper",
+      ".width",
+      ".point",
+      ".interval",
+      "d1.rhat",
+      "m_diff.rhat",
+      "m_ratio.rhat",
+      "meta_d.rhat"
+    )
+  
+  # Check that the posterior_infos column in the model_infos dataframe is valid
+  assert_that(
+    all(
+      sapply(model_infos$posterior_infos, function(x)
+        is_tibble(x) &&
+          nrow(x) == 1 && identical(colnames(x), expected_columns))
+    ),
+    msg = "The 'model_infos' dataframe should have a valid 'posterior_infos'
+  column with each row containing a tibble with one row and
+  19 columns named as specified."
+  )
+  
+  
+  # Unnest the posterior_infos column and select relevant columns,
+  # removing unnecessary columns
   metad_indiv <- model_infos %>%
     unnest(posterior_infos) %>%
     select(-data,-output,-mcmc)
   
+  # Define the expected column names for the metad_indiv dataframe
+  expected_columns <-
+    c(
+      "id",
+      "S1",
+      "S2",
+      "d1",
+      "d1.lower",
+      "d1.upper",
+      "meta_d",
+      "meta_d.lower",
+      "meta_d.upper",
+      "m_ratio",
+      "m_ratio.lower",
+      "m_ratio.upper",
+      "m_diff",
+      "m_diff.lower",
+      "m_diff.upper",
+      ".width",
+      ".point",
+      ".interval",
+      "d1.rhat",
+      "m_diff.rhat",
+      "m_ratio.rhat",
+      "meta_d.rhat"
+    )
+
   # Return results
   return(metad_indiv)
   
 }
 
 ```
+
+
+
 
 ## Run models
 
@@ -1169,139 +1417,14 @@ metad_indiv_non_recognized_statements <- fnc_metad_indiv(counts_unrecognized_sta
 metad_indiv_satire_statements <- fnc_metad_indiv(counts_satire_statements)
 metad_indiv_non_satire_statements <- fnc_metad_indiv(counts_non_satire_statements)
 
-```
-
-## Outliers (meta-d')
-
-Exclude meta-d' outliers using the standard box-and-whiskers plot criterion for outliers
-applied across all modelled participants (André, 2022; https://doi.org/10.1037/x).
-
-```{r exclude_outliers}
-# define function for counting outliers
-fnc_outlier_count <- function(df) {
-  output <- df %>%
-    filter(fnc_outlier(meta_d)) %>%
-    nrow()
-  
-  return(output)
-}
-
-# count outliers
-n_outliers_all_participants <-
-  fnc_outlier_count(metad_indiv_all_participants)
-n_outliers_six_or_more_waves <-
-  fnc_outlier_count(metad_indiv_six_or_more_waves)
-n_outliers_twelve_waves <-
-  fnc_outlier_count(metad_indiv_twelve_waves)
-n_outliers_congruent_party_statements <-
-  fnc_outlier_count(metad_indiv_congruent_party_statements)
-n_outliers_incongruent_party_statements <-
-  fnc_outlier_count(metad_indiv_incongruent_party_statements)
-n_outliers_neutral_party_statements <-
-  fnc_outlier_count(metad_indiv_neutral_party_statements)
-n_outliers_congruent_ideology_statements <-
-  fnc_outlier_count(metad_indiv_congruent_ideology_statements)
-n_outliers_incongruent_ideology_statements <-
-  fnc_outlier_count(metad_indiv_incongruent_ideology_statements)
-n_outliers_neutral_ideology_statements <-
-  fnc_outlier_count(metad_indiv_neutral_ideology_statements)
-n_outliers_congruent_truth_party_statements <-
-  fnc_outlier_count(metad_indiv_congruent_truth_party_statements)
-n_outliers_incongruent_truth_party_statements <-
-  fnc_outlier_count(metad_indiv_incongruent_truth_party_statements)
-n_outliers_neutral_truth_party_statements <-
-  fnc_outlier_count(metad_indiv_neutral_truth_party_statements)
-n_outliers_congruent_truth_ideology_statements <-
-  fnc_outlier_count(metad_indiv_congruent_truth_ideology_statements)
-n_outliers_incongruent_truth_ideology_statements <-
-  fnc_outlier_count(metad_indiv_incongruent_truth_ideology_statements)
-n_outliers_neutral_truth_ideology_statements <-
-  fnc_outlier_count(metad_indiv_neutral_truth_ideology_statements)
-n_outliers_recognized_statements <-
-  fnc_outlier_count(metad_indiv_recognized_statements)
-n_outliers_non_recognized_statements <-
-  fnc_outlier_count(metad_indiv_non_recognized_statements)
-n_outliers_satire_statements <-
-  fnc_outlier_count(metad_indiv_satire_statements)
-n_outliers_non_satire_statements <-
-  fnc_outlier_count(metad_indiv_non_satire_statements)
-
-# define function for excluding outliers
-fnc_outlier_exclusion <- function(df) {
-  output <- df %>%
-    filter(fnc_outlier(meta_d)) %>%
-    select(id) %>%
-    anti_join(df, ., by = "id")
-  return(output)
-}
-
-# exclude outliers
-metad_indiv_all_participants <-
-  fnc_outlier_exclusion(metad_indiv_all_participants)
-metad_indiv_six_or_more_waves <-
-  fnc_outlier_exclusion(metad_indiv_six_or_more_waves)
-metad_indiv_twelve_waves <-
-  fnc_outlier_exclusion(metad_indiv_twelve_waves)
-metad_indiv_congruent_party_statements <-
-  fnc_outlier_exclusion(metad_indiv_congruent_party_statements)
-metad_indiv_incongruent_party_statements <-
-  fnc_outlier_exclusion(metad_indiv_incongruent_party_statements)
-metad_indiv_neutral_party_statements <-
-  fnc_outlier_exclusion(metad_indiv_neutral_party_statements)
-metad_indiv_congruent_ideology_statements <-
-  fnc_outlier_exclusion(metad_indiv_congruent_ideology_statements)
-metad_indiv_incongruent_ideology_statements <-
-  fnc_outlier_exclusion(metad_indiv_incongruent_ideology_statements)
-metad_indiv_neutral_ideology_statements <-
-  fnc_outlier_exclusion(metad_indiv_neutral_ideology_statements)
-metad_indiv_congruent_truth_party_statements <-
-  fnc_outlier_exclusion(metad_indiv_congruent_truth_party_statements)
-metad_indiv_incongruent_truth_party_statements <-
-  fnc_outlier_exclusion(metad_indiv_incongruent_truth_party_statements)
-metad_indiv_neutral_truth_party_statements <-
-  fnc_outlier_exclusion(metad_indiv_neutral_truth_party_statements)
-metad_indiv_congruent_truth_ideology_statements <-
-  fnc_outlier_exclusion(metad_indiv_congruent_truth_ideology_statements)
-metad_indiv_incongruent_truth_ideology_statements <-
-  fnc_outlier_exclusion(metad_indiv_incongruent_truth_ideology_statements)
-metad_indiv_neutral_truth_ideology_statements <-
-  fnc_outlier_exclusion(metad_indiv_neutral_truth_ideology_statements)
-metad_indiv_recognized_statements <-
-  fnc_outlier_exclusion(metad_indiv_recognized_statements)
-metad_indiv_non_recognized_statements <-
-  fnc_outlier_exclusion(metad_indiv_non_recognized_statements)
-metad_indiv_satire_statements <-
-  fnc_outlier_exclusion(metad_indiv_satire_statements)
-metad_indiv_non_satire_statements <-
-  fnc_outlier_exclusion(metad_indiv_non_satire_statements)
-
-# create df for meta-d' values (as the other df's will be further manipulated below)
-metad_indiv_all_participants_meta_d_cleaned <-
-  metad_indiv_all_participants
+# create separate df for d1 and meta_d results to be used for testing H3
+metad_indiv_all_participants_d1_meta_d <-
+  metad_indiv_all_participants %>%
+  select(id, d1, meta_d)
 
 ```
 
-Based on our criterion for detecting outliers, we exclude the following numbers
-of participants' individual-level point estimates for meta-d' across different models:
-* All participants: `r n_outliers_all_participants` participants
-* Six or more waves: `r n_outliers_six_or_more_waves` participants
-* Twelve waves: `r n_outliers_twelve_waves` participants
-* Congruent statements (party only): `r n_outliers_congruent_party_statements` participants
-* Incongruent statements (party only): `r n_outliers_incongruent_party_statements` participants
-* Neutral statements (party only): `r n_outliers_neutral_party_statements` participants
-* Congruent statements (ideology only): `r n_outliers_congruent_ideology_statements` participants
-* Incongruent statements (ideology only): `r n_outliers_incongruent_ideology_statements` participants
-* Neutral statements (ideology only): `r n_outliers_neutral_ideology_statements` participants
-* Congruent statements (party*truth): `r n_outliers_congruent_truth_party_statements` participants
-* Incongruent statements (party*truth): `r n_outliers_incongruent_truth_party_statements` participants
-* Neutral statements (party*truth): `r n_outliers_neutral_truth_party_statements` participants
-* Congruent statements (ideology*truth): `r n_outliers_congruent_truth_ideology_statements` participants
-* Incongruent statements (ideology*truth): `r n_outliers_incongruent_truth_ideology_statements` participants
-* Neutral statements (ideology*truth): `r n_outliers_neutral_truth_ideology_statements` participants
-* Recognized statements: `r n_outliers_recognized_statements` participants
-* Non-recognized statements: `r n_outliers_non_recognized_statements` participants
-* Satire statements: `r n_outliers_satire_statements` participants
-* Non-satire statements: `r n_outliers_non_satire_statements` participants
+
 
 ## Uninterpretable values (Mratio and Mdiff)
 
@@ -1310,7 +1433,7 @@ across different models. If more than 10% of the resulting Mratio values are
 uninterpretable in any of the used models, including the robustness checks, Mdiff
 will be used instead (for all participants and for all individual-level analyses).
 
-```{r exclude_uninterpretable_values}
+```{r uninterpretable_values}
 # define function for calculating percentage of uninterpretable values and excluding them
 fnc_unint <- function(df) {
   df <- df %>%
@@ -1550,18 +1673,18 @@ for Mdiff across different models:
 ## Write to disk
 
 ```{r write_to_disk_individual_level}
-# meta-d' cleaned
+# d1 and meta-d'
 write_rds(
-  metad_indiv_all_participants_meta_d_cleaned,
+  metad_indiv_all_participants_d1_meta_d,
   here(
-    "output/models/indiv/metad_cleaned/metad_indiv_all_participants_meta_d_cleaned.rds"
+    "output/models/indiv/metad_cleaned/metad_indiv_all_participants_d1_meta_d.rds"
   ),
   compress = "gz"
 )
 write_csv(
-  metad_indiv_all_participants_meta_d_cleaned,
+  metad_indiv_all_participants_d1_meta_d,
   here(
-    "output/models/indiv/metad_cleaned/metad_indiv_all_participants_meta_d_cleaned.csv"
+    "output/models/indiv/metad_cleaned/metad_indiv_all_participants_d1_meta_d.csv"
   )
 )
 

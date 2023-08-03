@@ -41,10 +41,10 @@ source(here::here("code/_dependencies.R"))
 ```{r load_data}
 # load files
 participants <- read_rds(here::here("output/participants.rds"))
-metad_indiv_all_participants_meta_d_cleaned <-
+metad_indiv_all_participants_d1_meta_d <-
   read_rds(
     here::here(
-      "output/models/indiv/metad_cleaned/metad_indiv_all_participants_meta_d_cleaned.rds"
+      "output/models/indiv/metad_cleaned/metad_indiv_all_participants_d1_meta_d.rds"
     )
   )
 metad_indiv_all_participants_m_ratio_cleaned <-
@@ -62,7 +62,7 @@ metad_indiv_all_participants_m_diff_cleaned <-
 
 # merge to `dat`
 dat <- participants %>%
-  left_join(metad_indiv_all_participants_meta_d_cleaned %>%
+  left_join(metad_indiv_all_participants_d1_meta_d %>%
               select(id, d1, meta_d),
             by = "id") %>%
   left_join(metad_indiv_all_participants_m_ratio_cleaned %>%
@@ -100,7 +100,7 @@ fig_faith_intuition_d1 <- dat %>%
              y = d1)) +
   xlim(1, 5) +
   xlab("Faith in intuition for facts") +
-  ylab("d'") +
+  ylab(expression(italic("d'"))) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   stat_smooth(
     method = "loess",
@@ -129,7 +129,7 @@ fig_faith_intuition_meta_d <- dat %>%
              y = meta_d)) +
   xlim(1, 5) +
   xlab("Faith in intuition for facts") +
-  ylab("meta-d'") +
+  ylab(expression(italic("meta-d'"))) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   stat_smooth(
     method = "loess",
@@ -159,7 +159,7 @@ fig_faith_intuition_mratio <- dat %>%
              y = m_ratio)) +
   xlim(1, 5) +
   xlab("Faith in intuition for facts") +
-  ylab("Mratio") +
+  ylab(expression(italic("Mratio"))) +
   geom_hline(yintercept = 1, linetype = "dashed") +
   stat_smooth(
     method = "loess",
@@ -189,7 +189,7 @@ fig_faith_intuition_mdiff <- dat %>%
              y = m_diff)) +
   xlim(1, 5) +
   xlab("Faith in intuition for facts") +
-  ylab("Mdiff") +
+  ylab(expression(italic("Mdiff"))) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   stat_smooth(
     method = "loess",
@@ -205,7 +205,33 @@ fig_faith_intuition_mdiff <-
 
 fig_faith_intuition_mdiff
 
+# compute correlation
 cor.test(dat$faith_intuition, dat$m_diff, method = c("spearman"))
+
+# compute Bayes factor
+correlationBF(rank(dat$faith_intuition), rank(dat$m_diff))
+
+```
+
+## All in one figure
+
+```{r}
+fig_faith_intuition_merged <- ggarrange(
+  fig_faith_intuition_d1,
+  fig_faith_intuition_meta_d,
+  fig_faith_intuition_mdiff,
+  ncol = 1,
+  nrow = 3,
+  labels = c("A", "B", "C")
+)
+fig_faith_intuition_merged
+
+save_plot(
+  here("output/figures/fig_faith_intuition_merged.pdf"),
+  fig_faith_intuition_merged,
+  base_width = 8,
+  base_height = 15
+)
 
 ```
 
@@ -221,10 +247,6 @@ Test: We plot each participant’s point prediction for Mratio (Mdiff) against
 their beliefs that truth is political using robust LOESS smooths and 95% confidence
 bands. Then, we also run a Spearman correlation.
 
-
-
-
-
 ## d'
 
 ```{r truth_political_d1}
@@ -234,7 +256,7 @@ fig_truth_political_d1 <- dat %>%
              y = d1)) +
   xlim(1, 5) +
   xlab("Truth is political") +
-  ylab("d'") +
+  ylab(expression(italic("d'"))) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   stat_smooth(
     method = "loess",
@@ -263,7 +285,7 @@ fig_truth_political_meta_d <- dat %>%
              y = meta_d)) +
   xlim(1, 5) +
   xlab("Truth is political") +
-  ylab("meta-d'") +
+  ylab(expression(italic("meta-d'"))) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   stat_smooth(
     method = "loess",
@@ -293,7 +315,7 @@ fig_truth_political_mratio <- dat %>%
              y = m_ratio)) +
   xlim(1, 5) +
   xlab("Truth is political") +
-  ylab("Mratio") +
+  ylab(expression(italic("Mratio"))) +
   geom_hline(yintercept = 1, linetype = "dashed") +
   stat_smooth(
     method = "loess",
@@ -323,7 +345,7 @@ fig_truth_political_mdiff <- dat %>%
              y = m_diff)) +
   xlim(1, 5) +
   xlab("Truth is political") +
-  ylab("Mdiff") +
+  ylab(expression(italic("Mdiff"))) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   stat_smooth(
     method = "loess",
@@ -339,7 +361,33 @@ fig_truth_political_mdiff <-
 
 fig_truth_political_mdiff
 
+# compute correlation
 cor.test(dat$truth_political, dat$m_diff, method = c("spearman"))
+
+# compute Bayes factor
+correlationBF(rank(dat$truth_political), rank(dat$m_diff))
+
+```
+
+## All in one figure
+
+```{r}
+fig_truth_political_merged <- ggarrange(
+  fig_truth_political_d1,
+  fig_truth_political_meta_d,
+  fig_truth_political_mdiff,
+  ncol = 1,
+  nrow = 3,
+  labels = c("A", "B", "C")
+)
+fig_truth_political_merged
+
+save_plot(
+  here("output/figures/fig_truth_political_merged.pdf"),
+  fig_truth_political_merged,
+  base_width = 8,
+  base_height = 15
+)
 
 ```
 
@@ -364,7 +412,7 @@ fig_need_evidence_d1 <- dat %>%
              y = d1)) +
   xlim(1, 5) +
   xlab("Need for evidence") +
-  ylab("d'") +
+  ylab(expression(italic("d'"))) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   stat_smooth(
     method = "loess",
@@ -393,7 +441,7 @@ fig_need_evidence_meta_d <- dat %>%
              y = meta_d)) +
   xlim(1, 5) +
   xlab("Need for evidence") +
-  ylab("meta-d'") +
+  ylab(expression(italic("meta-d'"))) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   stat_smooth(
     method = "loess",
@@ -423,7 +471,7 @@ fig_need_evidence_mratio <- dat %>%
              y = m_ratio)) +
   xlim(1, 5) +
   xlab("Need for evidence") +
-  ylab("Mratio") +
+  ylab(expression(italic("Mratio"))) +
   geom_hline(yintercept = 1, linetype = "dashed") +
   stat_smooth(
     method = "loess",
@@ -453,7 +501,7 @@ fig_need_evidence_mdiff <- dat %>%
              y = m_diff)) +
   xlim(1, 5) +
   xlab("Need for evidence") +
-  ylab("Mdiff") +
+  ylab(expression(italic("Mdiff"))) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   stat_smooth(
     method = "loess",
@@ -469,7 +517,33 @@ fig_need_evidence_mdiff <-
 
 fig_need_evidence_mdiff
 
-cor.test(dat$need_evidence, dat$m_ratio, method = c("spearman"))
+# compute correlation
+cor.test(dat$need_evidence, dat$m_diff, method = c("spearman"))
+
+# compute Bayes factor
+correlationBF(rank(dat$need_evidence), rank(dat$m_diff))
+
+```
+
+## All in one figure
+
+```{r}
+fig_need_evidence_merged <- ggarrange(
+  fig_need_evidence_d1,
+  fig_need_evidence_meta_d,
+  fig_need_evidence_mdiff,
+  ncol = 1,
+  nrow = 3,
+  labels = c("A", "B", "C")
+)
+fig_need_evidence_merged
+
+save_plot(
+  here("output/figures/fig_need_evidence_merged.pdf"),
+  fig_need_evidence_merged,
+  base_width = 8,
+  base_height = 15
+)
 
 ```
 
@@ -492,7 +566,7 @@ fig_age_d1 <- dat %>%
   ggplot(aes(x = age,
              y = d1)) +
   xlab("Age") +
-  ylab("d'") +
+  ylab(expression(italic("d'"))) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   stat_smooth(
     method = "loess",
@@ -520,7 +594,7 @@ fig_age_meta_d <- dat %>%
   ggplot(aes(x = age,
              y = meta_d)) +
   xlab("Age") +
-  ylab("meta-d'") +
+  ylab(expression(italic("meta-d'"))) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   stat_smooth(
     method = "loess",
@@ -549,7 +623,7 @@ fig_age_mratio <- dat %>%
   ggplot(aes(x = age,
              y = m_ratio)) +
   xlab("Age") +
-  ylab("Mratio") +
+  ylab(expression(italic("Mratio"))) +
   geom_hline(yintercept = 1, linetype = "dashed") +
   stat_smooth(
     method = "loess",
@@ -577,7 +651,7 @@ fig_age_mdiff <- dat %>%
   ggplot(aes(x = age,
              y = m_diff)) +
   xlab("Age") +
-  ylab("Mdiff") +
+  ylab(expression(italic("Mdiff"))) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   stat_smooth(
     method = "loess",
@@ -592,9 +666,37 @@ fig_age_mdiff <- ggMarginal(fig_age_mdiff, type = "histogram")
 
 fig_age_mdiff
 
+# compute correlation
 cor.test(dat$age, dat$m_diff, method = c("spearman"))
 
+# compute Bayes factor
+correlationBF(rank(dat$age), rank(dat$m_diff))
+
 ```
+
+## All in one figure
+
+```{r}
+fig_age_merged <- ggarrange(
+  fig_age_d1,
+  fig_age_meta_d,
+  fig_age_mdiff,
+  ncol = 1,
+  nrow = 3,
+  labels = c("A", "B", "C")
+)
+fig_age_merged
+
+save_plot(
+  here("output/figures/fig_age_merged.pdf"),
+  fig_age_merged,
+  base_width = 8,
+  base_height = 15
+)
+
+```
+
+
 
 # H3.1-3.4: Plot all predictors in one figure
 
@@ -649,7 +751,7 @@ fig_educ_d1 <- dat %>%
   ggplot(aes(x = educ,
              y = d1)) +
   xlab("Education") +
-  ylab("d'") +
+  ylab(expression(italic("d'"))) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   stat_smooth(
     method = "loess",
@@ -677,7 +779,7 @@ fig_educ_meta_d <- dat %>%
   ggplot(aes(x = educ,
              y = meta_d)) +
   xlab("Education") +
-  ylab("meta-d'") +
+  ylab(expression(italic("meta-d'"))) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   stat_smooth(
     method = "loess",
@@ -706,7 +808,7 @@ fig_educ_mratio <- dat %>%
   ggplot(aes(x = educ,
              y = m_ratio)) +
   xlab("Education") +
-  ylab("Mratio") +
+  ylab(expression(italic("Mratio"))) +
   geom_hline(yintercept = 1, linetype = "dashed") +
   stat_smooth(
     method = "loess",
@@ -735,7 +837,7 @@ fig_educ_mdiff <- dat %>%
   ggplot(aes(x = educ,
              y = m_diff)) +
   xlab("Education") +
-  ylab("Mdiff") +
+  ylab(expression(italic("Mdiff"))) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   stat_smooth(
     method = "loess",
@@ -751,6 +853,33 @@ fig_educ_mdiff <-
 
 fig_educ_mdiff
 
+# compute correlation
 cor.test(dat$educ, dat$m_diff, method = c("spearman"))
+
+# compute Bayes factor
+correlationBF(rank(dat$educ), rank(dat$m_diff))
+
+```
+
+
+## All in one figure
+
+```{r}
+fig_educ_merged <- ggarrange(
+  fig_educ_d1,
+  fig_educ_meta_d,
+  fig_educ_mdiff,
+  ncol = 1,
+  nrow = 3,
+  labels = c("A", "B", "C")
+)
+fig_educ_merged
+
+save_plot(
+  here("output/figures/fig_educ_merged.pdf"),
+  fig_educ_merged,
+  base_width = 8,
+  base_height = 15
+)
 
 ```

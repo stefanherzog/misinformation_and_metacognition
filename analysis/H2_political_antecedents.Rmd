@@ -102,7 +102,7 @@ fig_dem_rep_d1 <- df_dem_rep %>%
   )) +
   scale_y_continuous(breaks = pretty_breaks(10)) +
   coord_fixed(ratio = 2) +
-  ylim(min(0), max(df_dem_rep$d1_g.upper)) +
+  ylim(min(0), max(1.5)) +
   geom_pointrange(aes(group = items),
                   position = position_nudge(
                     x = case_when(
@@ -116,9 +116,9 @@ fig_dem_rep_d1 <- df_dem_rep %>%
   scale_color_manual(
     values = c(
       "all" = "black",
-      "congruent (party)" = "turquoise",
+      "congruent (party)" = "#32CD32",
       "incongruent (party)" = "red",
-      "neutral (party)" = "grey"
+      "neutral (party)" = "#666666"
     )
   ) +
   scale_shape_manual(
@@ -129,7 +129,7 @@ fig_dem_rep_d1 <- df_dem_rep %>%
       "neutral (party)" = 23
     )
   ) +
-  labs(x = "", y = "d'", shape = "Statements") +
+  labs(x = "", y = expression(italic("d'")), shape = "Statements") +
   geom_hline(yintercept = 0, linetype = "dashed") +
   theme_minimal_hgrid() +
   labs(color = "Statements")
@@ -149,7 +149,7 @@ fig_dem_rep_meta_d1 <- df_dem_rep %>%
   ) +
   scale_y_continuous(breaks = pretty_breaks(10)) +
   coord_fixed(ratio = 2) +
-  ylim(min(0), max(df_dem_rep$meta_d1_g.upper)) +
+  ylim(min(0), max(1.5)) +
   geom_pointrange(aes(group = items),
                   position = position_nudge(
                     x = case_when(
@@ -163,9 +163,9 @@ fig_dem_rep_meta_d1 <- df_dem_rep %>%
   scale_color_manual(
     values = c(
       "all" = "black",
-      "congruent (party)" = "turquoise",
+      "congruent (party)" = "#32CD32",
       "incongruent (party)" = "red",
-      "neutral (party)" = "grey"
+      "neutral (party)" = "#666666"
     )
   ) +
   scale_shape_manual(
@@ -176,7 +176,7 @@ fig_dem_rep_meta_d1 <- df_dem_rep %>%
       "neutral (party)" = 23
     )
   ) +
-  labs(x = "", y = "meta-d'", shape = "Statements") +
+  labs(x = "", y = expression(italic("meta-d'")), shape = "Statements") +
   geom_hline(yintercept = 0, linetype = "dashed") +
   theme_minimal_hgrid() +
   labs(color = "Statements")
@@ -196,7 +196,18 @@ fig_dem_rep_mratio <- df_dem_rep %>%
   ) +
   scale_y_continuous(breaks = pretty_breaks(10)) +
   coord_fixed(ratio = 2) +
-  ylim(min(0), max(df_dem_rep$Mratio_g.upper)) +
+  ylim(min(0), max(1.5)) +
+  geom_rect(
+    aes(
+      xmin = -Inf,
+      xmax = Inf,
+      ymin = 0.9,
+      ymax = 1.1
+    ),
+    fill = "#F2F2F2",
+    alpha = 0.5,
+    inherit.aes = FALSE
+  ) +
   geom_pointrange(aes(group = items),
                   position = position_nudge(
                     x = case_when(
@@ -211,9 +222,9 @@ fig_dem_rep_mratio <- df_dem_rep %>%
   scale_color_manual(
     values = c(
       "all" = "black",
-      "congruent (party)" = "turquoise",
+      "congruent (party)" = "#32CD32",
       "incongruent (party)" = "red",
-      "neutral (party)" = "grey"
+      "neutral (party)" = "#666666"
     )
   ) +
   scale_shape_manual(
@@ -224,7 +235,7 @@ fig_dem_rep_mratio <- df_dem_rep %>%
       "neutral (party)" = 23
     )
   ) +
-  labs(x = "", y = "Mratio", shape = "Statements") +
+  labs(x = "", y = expression(italic("Mratio")), shape = "Statements") +
   theme_minimal_hgrid() +
   labs(color = "Statements")
 fig_dem_rep_mratio
@@ -245,7 +256,7 @@ fig_dem_rep_mdiff <- df_dem_rep %>%
   coord_fixed(ratio = 2) +
   ylim(-1, 1) +
   ylim(min(df_dem_rep$Mdiff_g.lower),
-       max(df_dem_rep$Mdiff_g.upper)) +
+       max(0.3)) +
   geom_pointrange(aes(group = items),
                   position = position_nudge(
                     x = case_when(
@@ -260,9 +271,9 @@ fig_dem_rep_mdiff <- df_dem_rep %>%
   scale_color_manual(
     values = c(
       "all" = "black",
-      "congruent (party)" = "turquoise",
+      "congruent (party)" = "#32CD32",
       "incongruent (party)" = "red",
-      "neutral (party)" = "grey"
+      "neutral (party)" = "#666666"
     )
   ) +
   scale_shape_manual(
@@ -273,7 +284,7 @@ fig_dem_rep_mdiff <- df_dem_rep %>%
       "neutral (party)" = 23
     )
   ) +
-  labs(x = "", y = "Mdiff", shape = "Statements") +
+  labs(x = "", y = expression(italic("Mdiff")), shape = "Statements") +
   geom_hline(yintercept = 0, linetype = "dashed") +
   theme_minimal_hgrid() +
   labs(color = "Statements")
@@ -323,9 +334,9 @@ fig_dem_rep_truth_d1 <- df_dem_rep %>%
   scale_color_manual(
     values = c(
       "all" = "black",
-      "congruent (party*truth)" = "turquoise",
+      "congruent (party*truth)" = "#32CD32",
       "incongruent (party*truth)" = "red",
-      "neutral (party*truth)" = "grey"
+      "neutral (party*truth)" = "#666666"
     )
   ) +
   scale_shape_manual(
@@ -336,7 +347,7 @@ fig_dem_rep_truth_d1 <- df_dem_rep %>%
       "neutral (party*truth)" = 23
     )
   ) +
-  labs(x = "", y = "d'", shape = "Statements") +
+  labs(x = "", y = expression(italic("d'")), shape = "Statements") +
   geom_hline(yintercept = 0, linetype = "dashed") +
   theme_minimal_hgrid() +
   labs(color = "Statements")
@@ -356,7 +367,7 @@ fig_dem_rep_truth_meta_d1 <- df_dem_rep %>%
   ) +
   scale_y_continuous(breaks = pretty_breaks(10)) +
   coord_fixed(ratio = 2) +
-  ylim(min(0), max(df_dem_rep$meta_d1_g.upper)) +
+  ylim(min(0), max(1.5)) +
   geom_pointrange(aes(group = items),
                   position = position_nudge(
                     x = case_when(
@@ -370,9 +381,9 @@ fig_dem_rep_truth_meta_d1 <- df_dem_rep %>%
   scale_color_manual(
     values = c(
       "all" = "black",
-      "congruent (party*truth)" = "turquoise",
+      "congruent (party*truth)" = "#32CD32",
       "incongruent (party*truth)" = "red",
-      "neutral (party*truth)" = "grey"
+      "neutral (party*truth)" = "#666666"
     )
   ) +
   scale_shape_manual(
@@ -383,7 +394,7 @@ fig_dem_rep_truth_meta_d1 <- df_dem_rep %>%
       "neutral (party*truth)" = 23
     )
   ) +
-  labs(x = "", y = "meta-d'", shape = "Statements") +
+  labs(x = "", y = expression(italic("meta-d'")), shape = "Statements") +
   geom_hline(yintercept = 0, linetype = "dashed") +
   theme_minimal_hgrid() +
   labs(color = "Statements")
@@ -403,7 +414,18 @@ fig_dem_rep_truth_mratio <- df_dem_rep %>%
   ) +
   scale_y_continuous(breaks = pretty_breaks(10)) +
   coord_fixed(ratio = 2) +
-  ylim(min(0), max(df_dem_rep$Mratio_g.upper)) +
+  ylim(min(0), max(1.5)) +
+  geom_rect(
+    aes(
+      xmin = -Inf,
+      xmax = Inf,
+      ymin = 0.9,
+      ymax = 1.1
+    ),
+    fill = "#F2F2F2",
+    alpha = 0.5,
+    inherit.aes = FALSE
+  ) +  
   geom_pointrange(aes(group = items),
                   position = position_nudge(
                     x = case_when(
@@ -418,9 +440,9 @@ fig_dem_rep_truth_mratio <- df_dem_rep %>%
   scale_color_manual(
     values = c(
       "all" = "black",
-      "congruent (party*truth)" = "turquoise",
+      "congruent (party*truth)" = "#32CD32",
       "incongruent (party*truth)" = "red",
-      "neutral (party*truth)" = "grey"
+      "neutral (party*truth)" = "#666666"
     )
   ) +
   scale_shape_manual(
@@ -431,7 +453,7 @@ fig_dem_rep_truth_mratio <- df_dem_rep %>%
       "neutral (party*truth)" = 23
     )
   ) +
-  labs(x = "", y = "Mratio", shape = "Statements") +
+  labs(x = "", y = expression(italic("Mratio")), shape = "Statements") +
   theme_minimal_hgrid() +
   labs(color = "Statements")
 fig_dem_rep_truth_mratio
@@ -467,9 +489,9 @@ fig_dem_rep_truth_mdiff <- df_dem_rep %>%
   scale_color_manual(
     values = c(
       "all" = "black",
-      "congruent (party*truth)" = "turquoise",
+      "congruent (party*truth)" = "#32CD32",
       "incongruent (party*truth)" = "red",
-      "neutral (party*truth)" = "grey"
+      "neutral (party*truth)" = "#666666"
     )
   ) +
   scale_shape_manual(
@@ -480,7 +502,7 @@ fig_dem_rep_truth_mdiff <- df_dem_rep %>%
       "neutral (party*truth)" = 23
     )
   ) +
-  labs(x = "", y = "Mdiff", shape = "Statements") +
+  labs(x = "", y = expression(italic("Mdiff")), shape = "Statements") +
   geom_hline(yintercept = 0, linetype = "dashed") +
   theme_minimal_hgrid() +
   labs(color = "Statements")
@@ -572,9 +594,9 @@ fig_lib_con_d1 <- df_lib_con %>%
   scale_color_manual(
     values = c(
       "all" = "black",
-      "congruent (ideology)" = "turquoise",
+      "congruent (ideology)" = "#32CD32",
       "incongruent (ideology)" = "red",
-      "neutral (ideology)" = "grey"
+      "neutral (ideology)" = "#666666"
     )
   ) +
   scale_shape_manual(
@@ -585,7 +607,7 @@ fig_lib_con_d1 <- df_lib_con %>%
       "neutral (ideology)" = 23
     )
   ) +
-  labs(x = "", y = "d'", shape = "Statements") +
+  labs(x = "", y = expression(italic("d'")), shape = "Statements") +
   geom_hline(yintercept = 0, linetype = "dashed") +
   theme_minimal_hgrid() +
   labs(color = "Statements")
@@ -619,9 +641,9 @@ fig_lib_con_meta_d1 <- df_lib_con %>%
   scale_color_manual(
     values = c(
       "all" = "black",
-      "congruent (ideology)" = "turquoise",
+      "congruent (ideology)" = "#32CD32",
       "incongruent (ideology)" = "red",
-      "neutral (ideology)" = "grey"
+      "neutral (ideology)" = "#666666"
     )
   ) +
   scale_shape_manual(
@@ -632,7 +654,7 @@ fig_lib_con_meta_d1 <- df_lib_con %>%
       "neutral (ideology)" = 23
     )
   ) +
-  labs(x = "", y = "meta-d'", shape = "Statements") +
+  labs(x = "", y = expression(italic("meta-d'")), shape = "Statements") +
   geom_hline(yintercept = 0, linetype = "dashed") +
   theme_minimal_hgrid() +
   labs(color = "Statements")
@@ -652,7 +674,18 @@ fig_lib_con_mratio <- df_lib_con %>%
   ) +
   scale_y_continuous(breaks = pretty_breaks(10)) +
   coord_fixed(ratio = 2) +
-  ylim(min(0), max(df_lib_con$Mratio_g.upper)) +
+  ylim(min(0), max(1.5)) +
+  geom_rect(
+    aes(
+      xmin = -Inf,
+      xmax = Inf,
+      ymin = 0.9,
+      ymax = 1.1
+    ),
+    fill = "#F2F2F2",
+    alpha = 0.5,
+    inherit.aes = FALSE
+  ) +  
   geom_pointrange(aes(group = items),
                   position = position_nudge(
                     x = case_when(
@@ -666,9 +699,9 @@ fig_lib_con_mratio <- df_lib_con %>%
   scale_color_manual(
     values = c(
       "all" = "black",
-      "congruent (ideology)" = "turquoise",
+      "congruent (ideology)" = "#32CD32",
       "incongruent (ideology)" = "red",
-      "neutral (ideology)" = "grey"
+      "neutral (ideology)" = "#666666"
     )
   ) +
   scale_shape_manual(
@@ -680,7 +713,7 @@ fig_lib_con_mratio <- df_lib_con %>%
     )
   ) +
   geom_hline(yintercept = 1, linetype = "dashed") +
-  labs(x = "", y = "Mratio", shape = "Statements") +
+  labs(x = "", y = expression(italic("Mratio")), shape = "Statements") +
   theme_minimal_hgrid() +
   labs(color = "Statements")
 fig_lib_con_mratio
@@ -715,9 +748,9 @@ fig_lib_con_mdiff <- df_lib_con %>%
   scale_color_manual(
     values = c(
       "all" = "black",
-      "congruent (ideology)" = "turquoise",
+      "congruent (ideology)" = "#32CD32",
       "incongruent (ideology)" = "red",
-      "neutral (ideology)" = "grey"
+      "neutral (ideology)" = "#666666"
     )
   ) +
   scale_shape_manual(
@@ -728,7 +761,7 @@ fig_lib_con_mdiff <- df_lib_con %>%
       "neutral (ideology)" = 23
     )
   ) +
-  labs(x = "", y = "Mdiff", shape = "Statements") +
+  labs(x = "", y = expression(italic("Mdiff")), shape = "Statements") +
   theme_minimal_hgrid() +
   labs(color = "Statements")
 fig_lib_con_mdiff
@@ -777,9 +810,9 @@ fig_lib_con_truth_d1 <- df_lib_con %>%
   scale_color_manual(
     values = c(
       "all" = "black",
-      "congruent (ideology*truth)" = "turquoise",
+      "congruent (ideology*truth)" = "#32CD32",
       "incongruent (ideology*truth)" = "red",
-      "neutral (ideology*truth)" = "grey"
+      "neutral (ideology*truth)" = "#666666"
     )
   ) +
   scale_shape_manual(
@@ -790,7 +823,7 @@ fig_lib_con_truth_d1 <- df_lib_con %>%
       "neutral (ideology*truth)" = 23
     )
   ) +
-  labs(x = "", y = "d'", shape = "Statements") +
+  labs(x = "", y = expression(italic("d'")), shape = "Statements") +
   geom_hline(yintercept = 0, linetype = "dashed") +
   theme_minimal_hgrid() +
   labs(color = "Statements")
@@ -824,9 +857,9 @@ fig_lib_con_truth_meta_d1 <- df_lib_con %>%
   scale_color_manual(
     values = c(
       "all" = "black",
-      "congruent (ideology*truth)" = "turquoise",
+      "congruent (ideology*truth)" = "#32CD32",
       "incongruent (ideology*truth)" = "red",
-      "neutral (ideology*truth)" = "grey"
+      "neutral (ideology*truth)" = "#666666"
     )
   ) +
   scale_shape_manual(
@@ -837,7 +870,7 @@ fig_lib_con_truth_meta_d1 <- df_lib_con %>%
       "neutral (ideology*truth)" = 23
     )
   ) +
-  labs(x = "", y = "meta-d'", shape = "Statements") +
+  labs(x = "", y = expression(italic("meta-d'")), shape = "Statements") +
   geom_hline(yintercept = 0, linetype = "dashed") +
   theme_minimal_hgrid() +
   labs(color = "Statements")
@@ -857,7 +890,18 @@ fig_lib_con_truth_mratio <- df_lib_con %>%
   ) +
   scale_y_continuous(breaks = pretty_breaks(10)) +
   coord_fixed(ratio = 2) +
-  ylim(min(0), max(df_lib_con$Mratio_g.upper)) +
+  ylim(min(0), max(1.5)) +
+  geom_rect(
+    aes(
+      xmin = -Inf,
+      xmax = Inf,
+      ymin = 0.9,
+      ymax = 1.1
+    ),
+    fill = "#F2F2F2",
+    alpha = 0.5,
+    inherit.aes = FALSE
+  ) +  
   geom_pointrange(aes(group = items),
                   position = position_nudge(
                     x = case_when(
@@ -871,9 +915,9 @@ fig_lib_con_truth_mratio <- df_lib_con %>%
   scale_color_manual(
     values = c(
       "all" = "black",
-      "congruent (ideology*truth)" = "turquoise",
+      "congruent (ideology*truth)" = "#32CD32",
       "incongruent (ideology*truth)" = "red",
-      "neutral (ideology*truth)" = "grey"
+      "neutral (ideology*truth)" = "#666666"
     )
   ) +
   scale_shape_manual(
@@ -885,7 +929,7 @@ fig_lib_con_truth_mratio <- df_lib_con %>%
     )
   ) +
   geom_hline(yintercept = 1, linetype = "dashed") +
-  labs(x = "", y = "Mratio", shape = "Statements") +
+  labs(x = "", y = expression(italic("Mratio")), shape = "Statements") +
   theme_minimal_hgrid() +
   labs(color = "Statements")
 fig_lib_con_truth_mratio
@@ -920,9 +964,9 @@ fig_lib_con_truth_mdiff <- df_lib_con %>%
   scale_color_manual(
     values = c(
       "all" = "black",
-      "congruent (ideology*truth)" = "turquoise",
+      "congruent (ideology*truth)" = "#32CD32",
       "incongruent (ideology*truth)" = "red",
-      "neutral (ideology*truth)" = "grey"
+      "neutral (ideology*truth)" = "#666666"
     )
   ) +
   scale_shape_manual(
@@ -933,7 +977,7 @@ fig_lib_con_truth_mdiff <- df_lib_con %>%
       "neutral (ideology*truth)" = 23
     )
   ) +
-  labs(x = "", y = "Mdiff", shape = "Statements") +
+  labs(x = "", y = expression(italic("Mdiff")), shape = "Statements") +
   geom_hline(yintercept = 0, linetype = "dashed") +
   theme_minimal_hgrid() +
   labs(color = "Statements")
@@ -968,7 +1012,7 @@ fig_party_ideology_merged <- ggarrange(
   ncol = 2,
   nrow = 3,
   labels = c("A", "B", "C", "D", "E", "F"),
-  common.legend = TRUE,
+  common.legend = FALSE,
   legend = "right"
 )
 fig_party_ideology_merged
@@ -986,7 +1030,7 @@ fig_party_ideology_mdff_merged <- ggarrange(
   ncol = 1,
   nrow = 2,
   labels = c("A", "B"),
-  common.legend = TRUE,
+  common.legend = FALSE,
   legend = "right"
 )
 fig_party_ideology_mdff_merged
@@ -995,7 +1039,7 @@ save_plot(
   here("output/figures/fig_party_ideology_mdff_merged.pdf"),
   fig_party_ideology_mdff_merged,
   base_width = 10,
-  base_height = 14
+  base_height = 10
 )
 
 # statement congruency based on political party/ideology and statement truth
@@ -1009,7 +1053,7 @@ fig_party_ideology_truth_merged <- ggarrange(
   ncol = 2,
   nrow = 3,
   labels = c("A", "B", "C", "D", "E", "F"),
-  common.legend = TRUE,
+  common.legend = FALSE,
   legend = "right"
 )
 fig_party_ideology_truth_merged
@@ -1017,8 +1061,8 @@ fig_party_ideology_truth_merged
 save_plot(
   here("output/figures/fig_party_ideology_truth_merged.pdf"),
   fig_party_ideology_truth_merged,
-  base_width = 10,
-  base_height = 14
+  base_width = 14,
+  base_height = 20
 )
 
 fig_party_ideology_truth_mdff_merged <- ggarrange(
@@ -1027,7 +1071,7 @@ fig_party_ideology_truth_mdff_merged <- ggarrange(
   ncol = 1,
   nrow = 2,
   labels = c("A", "B"),
-  common.legend = TRUE,
+  common.legend = FALSE,
   legend = "right"
 )
 fig_party_ideology_truth_mdff_merged
@@ -1035,8 +1079,8 @@ fig_party_ideology_truth_mdff_merged
 save_plot(
   here("output/figures/fig_party_ideology_truth_mdff_merged.pdf"),
   fig_party_ideology_truth_mdff_merged,
-  base_width = 8,
-  base_height = 14
+  base_width = 10,
+  base_height = 10
 )
 
 ```
@@ -1119,7 +1163,7 @@ fig_ideologies_d1 <- df_ideologies %>%
   )) +
   scale_y_continuous(breaks = pretty_breaks(10)) +
   coord_fixed(ratio = 2) +
-  ylim(-.3, 2.3) +
+  ylim(-.3, 1.7) +
   geom_pointrange(aes(group = items),
                   position = position_nudge(
                     x = case_when(
@@ -1133,9 +1177,9 @@ fig_ideologies_d1 <- df_ideologies %>%
   scale_color_manual(
     values = c(
       "all" = "black",
-      "congruent (ideology)" = "turquoise",
+      "congruent (ideology)" = "#32CD32",
       "incongruent (ideology)" = "red",
-      "neutral (ideology)" = "grey"
+      "neutral (ideology)" = "#666666"
     )
   ) +
   scale_shape_manual(
@@ -1146,7 +1190,7 @@ fig_ideologies_d1 <- df_ideologies %>%
       "neutral (ideology)" = 23
     )
   ) +
-  labs(x = "", y = "d'", shape = "Statements") +
+  labs(x = "", y = expression(italic("d'")), shape = "Statements") +
   scale_x_discrete(labels = c('very\nliberal', '', '', '', '', 'very\nconservative')) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   theme_minimal_hgrid() +
@@ -1171,9 +1215,9 @@ fig_ideologies_all_statements_d1 <- df_ideologies %>%
   )) +
   scale_y_continuous(breaks = pretty_breaks(10)) +
   coord_fixed(ratio = 2) +
-  ylim(-.3, 2.5) +
+  ylim(-.3, 1.7) +
   geom_pointrange(position = position_nudge(-.225)) +
-  labs(x = "", y = "d'") +
+  labs(x = "", y = expression(italic("d'"))) +
   scale_x_discrete(labels = c('very\nliberal', '', '', '', '', 'very\nconservative')) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   theme_minimal_hgrid()
@@ -1200,7 +1244,7 @@ fig_ideologies_meta_d1 <- df_ideologies %>%
   ) +
   scale_y_continuous(breaks = pretty_breaks(10)) +
   coord_fixed(ratio = 2) +
-  ylim(-.3, 2.3) +
+  ylim(-.3, 1.8) +
   geom_pointrange(aes(group = items),
                   position = position_nudge(
                     x = case_when(
@@ -1214,9 +1258,9 @@ fig_ideologies_meta_d1 <- df_ideologies %>%
   scale_color_manual(
     values = c(
       "all" = "black",
-      "congruent (ideology)" = "turquoise",
+      "congruent (ideology)" = "#32CD32",
       "incongruent (ideology)" = "red",
-      "neutral (ideology)" = "grey"
+      "neutral (ideology)" = "#666666"
     )
   ) +
   scale_shape_manual(
@@ -1227,7 +1271,7 @@ fig_ideologies_meta_d1 <- df_ideologies %>%
       "neutral (ideology)" = 23
     )
   ) +
-  labs(x = "", y = "meta-d'", shape = "Statements") +
+  labs(x = "", y = expression(italic("meta-d'")), shape = "Statements") +
   scale_x_discrete(labels = c('very\nliberal', '', '', '', '', 'very\nconservative')) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   theme_minimal_hgrid() +
@@ -1255,7 +1299,18 @@ fig_ideologies_mratio <- df_ideologies %>%
   ) +
   scale_y_continuous(breaks = pretty_breaks(10)) +
   coord_fixed(ratio = 2) +
-  ylim(-.3, 2.5) +
+  ylim(-.3, 1.8) +
+  geom_rect(
+    aes(
+      xmin = -Inf,
+      xmax = Inf,
+      ymin = 0.9,
+      ymax = 1.1
+    ),
+    fill = "#F2F2F2",
+    alpha = 0.5,
+    inherit.aes = FALSE
+  ) +  
   geom_pointrange(aes(group = items),
                   position = position_nudge(
                     x = case_when(
@@ -1270,9 +1325,9 @@ fig_ideologies_mratio <- df_ideologies %>%
   scale_color_manual(
     values = c(
       "all" = "black",
-      "congruent (ideology)" = "turquoise",
+      "congruent (ideology)" = "#32CD32",
       "incongruent (ideology)" = "red",
-      "neutral (ideology)" = "grey"
+      "neutral (ideology)" = "#666666"
     )
   ) +
   scale_shape_manual(
@@ -1283,7 +1338,7 @@ fig_ideologies_mratio <- df_ideologies %>%
       "neutral (ideology)" = 23
     )
   ) +
-  labs(x = "", y = "Mratio", shape = "Statements") +
+  labs(x = "", y = expression(italic("Mratio")), shape = "Statements") +
   scale_x_discrete(labels = c('very\nliberal', '', '', '', '', 'very\nconservative')) +
   theme_minimal_hgrid() +
   labs(color = "Statements")
@@ -1307,10 +1362,21 @@ fig_ideologies_all_statements_mratio <- df_ideologies %>%
   )) +
   scale_y_continuous(breaks = pretty_breaks(10)) +
   coord_fixed(ratio = 2) +
-  ylim(-.3, 2.5) +
+  ylim(-.3, 1.8) +
+  geom_rect(
+    aes(
+      xmin = -Inf,
+      xmax = Inf,
+      ymin = 0.9,
+      ymax = 1.1
+    ),
+    fill = "#F2F2F2",
+    alpha = 0.5,
+    inherit.aes = FALSE
+  ) +  
   geom_hline(yintercept = 1, linetype = "dashed") +
   geom_pointrange(position = position_nudge(-.225)) +
-  labs(x = "", y = "Mratio") +
+  labs(x = "", y = expression(italic("Mratio"))) +
   scale_x_discrete(labels = c('very\nliberal', '', '', '', '', 'very\nconservative')) +
   theme_minimal_hgrid()
 fig_ideologies_all_statements_mratio
@@ -1351,9 +1417,9 @@ fig_ideologies_mdiff <- df_ideologies %>%
   scale_color_manual(
     values = c(
       "all" = "black",
-      "congruent (ideology)" = "turquoise",
+      "congruent (ideology)" = "#32CD32",
       "incongruent (ideology)" = "red",
-      "neutral (ideology)" = "grey"
+      "neutral (ideology)" = "#666666"
     )
   ) +
   scale_shape_manual(
@@ -1365,7 +1431,7 @@ fig_ideologies_mdiff <- df_ideologies %>%
     )
   ) +
   geom_hline(yintercept = 0, linetype = "dashed") +
-  labs(x = "", y = "Mdiff", shape = "Statements") +
+  labs(x = "", y = expression(italic("Mdiff")), shape = "Statements") +
   scale_x_discrete(labels = c('very\nliberal', '', '', '', '', 'very\nconservative')) +
   theme_minimal_hgrid() +
   labs(color = "Statements")
@@ -1415,7 +1481,7 @@ fig_ideologies_truth_d1 <- df_ideologies %>%
   )) +
   scale_y_continuous(breaks = pretty_breaks(10)) +
   coord_fixed(ratio = 2) +
-  ylim(-.3, 2.5) +
+  ylim(-.3, 2.2) +
   geom_pointrange(aes(group = items),
                   position = position_nudge(
                     x = case_when(
@@ -1429,9 +1495,9 @@ fig_ideologies_truth_d1 <- df_ideologies %>%
   scale_color_manual(
     values = c(
       "all" = "black",
-      "congruent (ideology*truth)" = "turquoise",
+      "congruent (ideology*truth)" = "#32CD32",
       "incongruent (ideology*truth)" = "red",
-      "neutral (ideology*truth)" = "grey"
+      "neutral (ideology*truth)" = "#666666"
     )
   ) +
   scale_shape_manual(values = c(
@@ -1440,7 +1506,7 @@ fig_ideologies_truth_d1 <- df_ideologies %>%
     "incongruent (ideology*truth)" = 24,
     "neutral (ideology*truth)" = 23
   )) +
-  labs(x = "", y = "d'", shape = "Statements") +
+  labs(x = "", y = expression(italic("d'")), shape = "Statements") +
   scale_x_discrete(labels = c('very\nliberal', '', '', '', '', 'very\nconservative')) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   theme_minimal_hgrid() +
@@ -1468,7 +1534,7 @@ fig_ideologies_truth_meta_d1 <- df_ideologies %>%
   ) +
   scale_y_continuous(breaks = pretty_breaks(10)) +
   coord_fixed(ratio = 2) +
-  ylim(-.3, 2.3) +
+  ylim(-.3, 1.9) +
   geom_pointrange(aes(group = items),
                   position = position_nudge(
                     x = case_when(
@@ -1482,9 +1548,9 @@ fig_ideologies_truth_meta_d1 <- df_ideologies %>%
   scale_color_manual(
     values = c(
       "all" = "black",
-      "congruent (ideology*truth)" = "turquoise",
+      "congruent (ideology*truth)" = "#32CD32",
       "incongruent (ideology*truth)" = "red",
-      "neutral (ideology*truth)" = "grey"
+      "neutral (ideology*truth)" = "#666666"
     )
   ) +
   scale_shape_manual(values = c(
@@ -1493,7 +1559,7 @@ fig_ideologies_truth_meta_d1 <- df_ideologies %>%
     "incongruent (ideology*truth)" = 24,
     "neutral (ideology*truth)" = 23
   )) +
-  labs(x = "", y = "meta-d'", shape = "Statements") +
+  labs(x = "", y = expression(italic("meta-d'")), shape = "Statements") +
   scale_x_discrete(labels = c('very\nliberal', '', '', '', '', 'very\nconservative')) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   theme_minimal_hgrid() +
@@ -1521,7 +1587,18 @@ fig_ideologies_truth_mratio <- df_ideologies %>%
   ) +
   scale_y_continuous(breaks = pretty_breaks(10)) +
   coord_fixed(ratio = 2) +
-  ylim(-.3, 2.5) +
+  ylim(-.3, 1.8) +
+  geom_rect(
+    aes(
+      xmin = -Inf,
+      xmax = Inf,
+      ymin = 0.9,
+      ymax = 1.1
+    ),
+    fill = "#F2F2F2",
+    alpha = 0.5,
+    inherit.aes = FALSE
+  ) +  
   geom_pointrange(aes(group = items),
                   position = position_nudge(
                     x = case_when(
@@ -1536,9 +1613,9 @@ fig_ideologies_truth_mratio <- df_ideologies %>%
   scale_color_manual(
     values = c(
       "all" = "black",
-      "congruent (ideology*truth)" = "turquoise",
+      "congruent (ideology*truth)" = "#32CD32",
       "incongruent (ideology*truth)" = "red",
-      "neutral (ideology*truth)" = "grey"
+      "neutral (ideology*truth)" = "#666666"
     )
   ) +
   scale_shape_manual(values = c(
@@ -1547,7 +1624,7 @@ fig_ideologies_truth_mratio <- df_ideologies %>%
     "incongruent (ideology*truth)" = 24,
     "neutral (ideology*truth)" = 23
   )) +
-  labs(x = "", y = "Mratio", shape = "Statements") +
+  labs(x = "", y = expression(italic("Mratio")), shape = "Statements") +
   scale_x_discrete(labels = c('very\nliberal', '', '', '', '', 'very\nconservative')) +
   theme_minimal_hgrid() +
   labs(color = "Statements")
@@ -1589,9 +1666,9 @@ fig_ideologies_truth_mdiff <- df_ideologies %>%
   scale_color_manual(
     values = c(
       "all" = "black",
-      "congruent (ideology*truth)" = "turquoise",
+      "congruent (ideology*truth)" = "#32CD32",
       "incongruent (ideology*truth)" = "red",
-      "neutral (ideology*truth)" = "grey"
+      "neutral (ideology*truth)" = "#666666"
     )
   ) +
   scale_shape_manual(values = c(
@@ -1601,7 +1678,7 @@ fig_ideologies_truth_mdiff <- df_ideologies %>%
     "neutral (ideology*truth)" = 23
   )) +
   geom_hline(yintercept = 0, linetype = "dashed") +
-  labs(x = "", y = "Mdiff", shape = "Statements") +
+  labs(x = "", y = expression(italic("Mdiff")), shape = "Statements") +
   scale_x_discrete(labels = c('very\nliberal', '', '', '', '', 'very\nconservative')) +
   theme_minimal_hgrid() +
   labs(color = "Statements")

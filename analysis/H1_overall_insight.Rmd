@@ -43,22 +43,20 @@ metad_group_all_participants_mcmc <- read_rds(here::here("output/models/group/me
 
 metad_group <- read_rds(here::here("output/models/group/metad_group.rds"))
 
-
 metad_group_all_participants <- metad_group %>% 
   filter(name == "all participants")
-
 
 ```
 
 
 
 # H1.1 / H1.2: Metacognitive ideal hypothesis / Domain comparison hypothesis
-Hypothesis (H1.1): Metacognitive efficiency for political statements is lower than the
+H1.1: Metacognitive efficiency for political statements is lower than the
 theoretically optimal metacognitive efficiency of Mratio = 1
 (see p.5 of preregistration:
 https://osf.io/veja6/files/osfstorage/614c91e915e9a4005d9239cf).
 
-Hypothesis (H1.2): Metacognitive efficiency for political statements is lower than for
+H1.2: Metacognitive efficiency for political statements is lower than for
 non-politicized domains such as biology and physics (Mratio = 0.99; Fischer et al.,
 2019) (see p.5 of preregistration:
 https://osf.io/veja6/files/osfstorage/614c91e915e9a4005d9239cf).
@@ -91,21 +89,27 @@ fig_mcmc <- metad_group_all_participants_mcmc[[1]] %>%
     colour = "grey",
     alpha = 0.5
   ) +
+  geom_vline(xintercept = metad_group_all_participants$Mratio_g,
+             linetype = "dashed",
+             size = 1.5) +
   geom_vline(
-    xintercept = metad_group_all_participants$Mratio_g,
-    linetype = "dashed",
+    xintercept = 1,
+    colour = "black",
+    linetype = "solid",
     size = 1.5
   ) +
-  geom_segment(aes(
-    x = metad_group_all_participants$Mratio_g.lower,
-    y = 50,
-    xend = metad_group_all_participants$Mratio_g.upper,
-    yend = 50
-  ),
-  colour = "grey",
-  size = 2.5) +
+  geom_segment(
+    aes(
+      x = metad_group_all_participants$Mratio_g.lower,
+      y = 50,
+      xend = metad_group_all_participants$Mratio_g.upper,
+      yend = 50
+    ),
+    colour = "grey",
+    size = 2.5
+  ) +
   ylab("Sample count") +
-  xlab("Mratio") +
+  xlab(expression(italic("Mratio"))) +
   theme_minimal_hgrid()
 fig_mcmc
 
